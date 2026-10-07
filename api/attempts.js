@@ -1,21 +1,27 @@
 import { pool } from '../lib/db.js';
 import { workerFromRequest } from '../lib/auth.js';
 import { MAX_BATCH, validateAttempt } from '../lib/attempts.js';
+import { certificateFor } from '../lib/certificates.js';
+import { plausibilityFlag } from '../lib/plausibility.js';
+import { loadScenario } from '../lib/scenarios.js';
 
 // Upsert on id: a sync that died halfway can simply be retried. A conflicting
 // id owned by another worker is never overwritten (the WHERE makes it a no-op).
 const UPSERT = `
-  INSERT INTO attempts (id, worker_id, scenario_id, score, passed, critical_fail, steps, duration_ms, device_time)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  INSERT INTO attempts (id, worker_id, scenario_id, score, passed, critical_fail, steps, duration_ms, device_time, flag)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
   ON CONFLICT (id) DO UPDATE SET
     scenario_id = EXCLUDED.scenario_id, score = EXCLUDED.score, passed = EXCLUDED.passed,
     critical_fail = EXCLUDED.critical_fail, steps = EXCLUDED.steps,
-    duration_ms = EXCLUDED.duration_ms, device_time = EXCLUDED.device_time
+    duration_ms = EXCLUDED.duration_ms, device_time = EXCLUDED.device_time, flag = EXCLUDED.flag
   WHERE attempts.worker_id = EXCLUDED.worker_id
-  RETURNING id`;
+  RETURNING id, (xmax = 0) AS inserted`;
 
 // POST /api/attempts — batch sync from the client outbox.
-// Body: { attempts: [...] }. Response: { synced: [ids], rejected: [{ id, error }] }
+// Body: { attempts: [...] }.
+// Response: { synced: [ids], rejected: [{ id, error }], flagged: [{ id, reason }],
+//             certificates: [{ id, token }] }
+// Passing attempts that fail the plausibility checks are stored but flagged and earn no certificate.
 // `synced` includes attempts the server already had; the client clears both lists.
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -33,6 +39,10 @@ export default async function handler(req, res) {
 
   const synced = [];
   const rejected = [];
+  const flagged = [];
+  let hasPass = false;
+  let hasNewPass = false;
+  let certificate = null;
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
@@ -42,13 +52,23 @@ export default async function handler(req, res) {
         rejected.push({ id: a?.id ?? null, error });
         continue;
       }
-      const { rowCount } = await db.query(UPSERT, [
+      const flag = plausibilityFlag(a, await loadScenario(a.scenarioId));
+      const { rowCount, rows } = await db.query(UPSERT, [
         a.id, worker.id, a.scenarioId, a.score, a.passed, a.criticalFail ?? false,
-        JSON.stringify(a.steps), a.durationMs, a.deviceTime,
+        JSON.stringify(a.steps), a.durationMs, a.deviceTime, flag,
       ]);
-      if (rowCount) synced.push(a.id);
-      else rejected.push({ id: a.id, error: 'id belongs to another worker' });
+      if (!rowCount) {
+        rejected.push({ id: a.id, error: 'id belongs to another worker' });
+        continue;
+      }
+      synced.push(a.id);
+      if (flag) flagged.push({ id: a.id, reason: flag });
+      else if (a.passed) {
+        hasPass = true;
+        hasNewPass ||= rows[0].inserted;
+      }
     }
+    if (hasPass) certificate = await certificateFor(db, worker.id, { hasNewPass });
     await db.query('COMMIT');
   } catch (e) {
     await db.query('ROLLBACK');
@@ -57,5 +77,5 @@ export default async function handler(req, res) {
     db.release();
   }
 
-  res.status(200).json({ synced, rejected });
+  res.status(200).json({ synced, rejected, flagged, certificates: certificate ? [certificate] : [] });
 }

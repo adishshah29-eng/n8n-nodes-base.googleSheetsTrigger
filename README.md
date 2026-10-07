@@ -17,11 +17,12 @@ markers/   printable A4 marker PDFs
 ```
 npm i && npm i --prefix client
 cp .env.example .env        # set DATABASE_URL (Neon / Vercel Postgres)
+node scripts/gen-key.js     # prints ED25519_PRIVATE_KEY (server env) and VITE_CERT_PUBLIC_KEY (client env)
 npm run migrate
 npm test                    # needs DATABASE_URL pointing at a disposable DB
 npx vercel dev              # serves client + api/ together
 ```
 
-Deploy: import the repo in Vercel; `vercel.json` builds `client/` and serves `api/` as functions. Set `DATABASE_URL` in project env vars.
+Deploy: import the repo in Vercel; `vercel.json` builds `client/` and serves `api/` as functions. Set `DATABASE_URL` and `ED25519_PRIVATE_KEY` in project env vars, and `VITE_CERT_PUBLIC_KEY` for the client build (it is baked in at build time, so changing the key needs a redeploy). `CERT_VALIDITY_MONTHS` is optional (default 12).
 
 See the implementation plan for scope and schedule.

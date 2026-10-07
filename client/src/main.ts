@@ -1,11 +1,22 @@
+import './style.css';
 import { requestPersistentStorage } from './store/db';
 import { syncOutbox } from './sync/sync';
 
 async function boot() {
+  const root = document.getElementById('app')!;
+
+  // A judge scanning a certificate QR lands here: verify only, no enrollment or sync.
+  if (location.pathname === '/v') {
+    const { renderVerify } = await import('./screens/verify');
+    await renderVerify(root);
+    window.addEventListener('hashchange', () => void renderVerify(root));
+    return;
+  }
+
   await requestPersistentStorage();
   void syncOutbox();
   window.addEventListener('online', () => void syncOutbox());
-  document.getElementById('app')!.textContent = 'Aotan';
+  root.textContent = 'Aotan';
 }
 
 void boot();

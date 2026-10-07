@@ -2,5 +2,6 @@
   "installCommand": "npm install && npm install --prefix client",
   "buildCommand": "npm run build --prefix client",
   "outputDirectory": "client/dist",
+  "functions": { "api/**/*.js": { "includeFiles": "content/scenarios/**" } },
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }

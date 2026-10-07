@@ -1,6 +1,6 @@
 // Integration test: needs DATABASE_URL pointing at a migrated, disposable database.
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { after, before, test } from 'node:test';
 import { pool } from '../lib/db.js';
 import attemptsHandler from '../api/attempts.js';
@@ -19,7 +19,10 @@ const call = (handler, { method = 'POST', body, headers = {} } = {}) =>
 
 const attempt = (over = {}) => ({
   id: randomUUID(), scenarioId: 'fire-panel', score: 70, passed: true, criticalFail: false,
-  steps: [{ stepId: 's2', optionId: 'alarm', decisionMs: 2000, tries: 1 }],
+  steps: [
+    { stepId: 's2', optionId: 'alarm', decisionMs: 2000, tries: 1 },
+    { stepId: 's3', decisionMs: 5000, tries: 1 },
+  ],
   durationMs: 30000, deviceTime: new Date().toISOString(), ...over,
 });
 
@@ -33,6 +36,8 @@ const sync = (token, attempts) =>
   call(attemptsHandler, { body: { attempts }, headers: { authorization: `Bearer ${token}` } });
 
 before(async () => {
+  // the signing key is read lazily, so setting it here is early enough
+  process.env.ED25519_PRIVATE_KEY = generateKeyPairSync('ed25519').privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64');
   const a = await enroll('A'); tokenA = a.deviceToken; idA = a.id;
   tokenB = (await enroll('B')).deviceToken;
 });
@@ -52,7 +57,8 @@ test('rejects non-POST and bad batches', async () => {
 test('stores attempts and is idempotent on retry', async () => {
   const a = attempt();
   const r1 = await sync(tokenA, [a]);
-  assert.deepEqual(r1.body, { synced: [a.id], rejected: [] });
+  assert.deepEqual(r1.body.synced, [a.id]);
+  assert.deepEqual(r1.body.rejected, []);
   const before = (await pool.query('SELECT received_at FROM attempts WHERE id=$1', [a.id])).rows[0];
   const r2 = await sync(tokenA, [a]);
   assert.deepEqual(r2.body.synced, [a.id]);

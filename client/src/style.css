@@ -1,0 +1,9 @@
+body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+.verify { max-width: 420px; margin: 0 auto; padding: 24px 16px; text-align: center; }
+.banner { margin: 0 0 20px; padding: 16px; border-radius: 12px; font-size: 1.5rem; }
+.banner.ok { background: #14532d; color: #bbf7d0; }
+.banner.bad { background: #7f1d1d; color: #fecaca; }
+.banner.warn { background: #78350f; color: #fde68a; }
+.photo { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; }
+.note { opacity: 0.8; }
+.verify ul { list-style: none; padding: 0; }
