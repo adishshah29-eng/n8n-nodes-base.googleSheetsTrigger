@@ -1,14 +1,13 @@
 import type { Scenario, Step } from '../engine/types';
+import { deviceTier } from '../three/quality';
+import { CameraError, type CameraProblem } from './camera';
 import { FlatStage } from './flat';
-import type { Stage, StageEffect } from './types';
-
-const wantsAR = () =>
-  !!navigator.mediaDevices?.getUserMedia && new URLSearchParams(location.search).get('ar') !== '0';
+import type { Stage, StageEffect, StageInfo } from './types';
 
 /**
- * AR when the phone allows it, otherwise the 2D stage: a denied camera, an old browser, a failed
- * MindAR start. The scenario always plays; AR is an upgrade, never a requirement.
- * `?ar=0` forces 2D.
+ * Best stage the phone can run, in order: AR on the marker -> 3D viewer (no camera) -> 2D picture
+ * (no WebGL). The scenario always plays. `?ar=0` skips AR; `?quality=low|high` overrides the device tier.
+ * The 3D modules are loaded on demand, so the home screen stays light.
  */
 class AutoStage implements Stage {
   private inner: Stage = new FlatStage();
@@ -16,21 +15,43 @@ class AutoStage implements Stage {
 
   constructor(private scenario: Scenario) {}
 
+  get info(): StageInfo {
+    return this.inner.info ?? { mode: 'flat' };
+  }
+
   async mount(host: HTMLElement) {
-    if (wantsAR()) {
-      const { ARStage } = await import('../ar/stage');
-      const ar = new ARStage(this.scenario);
+    const tier = deviceTier();
+    let problem: CameraProblem | undefined;
+    if (new URLSearchParams(location.search).get('ar') !== '0') {
+      const { ARStage } = await import('./ar');
+      const ar = new ARStage(this.scenario, tier);
       try {
         await ar.mount(host);
-        this.inner = ar;
-        this.ready = true;
-        return;
+        return this.use(ar);
       } catch (e) {
-        console.warn('AR unavailable, using 2D:', e);
+        problem = e instanceof CameraError ? e.problem : 'failed';
+        console.warn('AR unavailable:', problem, e);
         ar.destroy();
       }
     }
-    await this.inner.mount(host);
+    const { ViewerStage, hasWebGL } = await import('./viewer');
+    if (hasWebGL()) {
+      const viewer = new ViewerStage(tier, problem);
+      try {
+        await viewer.mount(host);
+        return this.use(viewer);
+      } catch (e) {
+        console.warn('3D viewer unavailable:', e);
+        viewer.destroy();
+      }
+    }
+    const flat = new FlatStage(problem);
+    await flat.mount(host);
+    this.use(flat);
+  }
+
+  private use(stage: Stage) {
+    this.inner = stage;
     this.ready = true;
   }
 

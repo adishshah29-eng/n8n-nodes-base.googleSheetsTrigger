@@ -10,7 +10,8 @@
     "test": "vitest run",
     "markers": "node scripts/make-markers.mjs",
     "targets": "node scripts/compile-targets.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "dev:phone": "HTTPS=1 vite --host"
   },
   "dependencies": {
     "@fontsource/noto-sans-ol-chiki": "^5.3.0",
@@ -26,6 +27,7 @@
     "@types/howler": "^2.2.12",
     "@types/node": "^22.20.5",
     "@types/three": "^0.160.0",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "jsqr": "^1.4.0",
     "playwright-core": "^1.63.0",
     "typescript": "^5.6.0",

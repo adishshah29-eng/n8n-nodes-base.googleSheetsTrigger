@@ -20,8 +20,9 @@ e2e/         full-browser tests, including the 3-minute demo script
   "Ready offline" badge that only turns green when the install is really complete.
 - **Scenarios** (data files in `content/scenarios/`): electrical panel fire, conveyor lock-out/tag-out. Choice cards
   (tap once to hear, again to choose), timed steps, wrong-choice feedback, critical mistakes, P-A-S-S / LOTO action
-  sequences. In **AR** on the printed marker (MindAR + three.js, procedural fire/smoke), or a **2D** fallback when
-  there is no camera. Long-press the logo for no-marker mode.
+  sequences. In **AR** on the printed marker (MindAR + three.js): physically based materials, soft shadows, image-based
+  lighting, shader fire/smoke/embers/CO2, and lighting estimated from the live camera. Without a camera, the same scene
+  plays in a **3D viewer** you can drag around. Long-press the logo for no-marker mode. Resolution adapts to hold ~30 fps.
 - **Offline-first**: attempts queue in IndexedDB and sync on reconnect; the server upserts by attempt id.
 - **Certificates**: the server checks plausibility, signs with Ed25519; the QR opens `/v#<token>`, which verifies the
   signature on the device (works offline) and, online, shows revocation status and the worker's photo.
@@ -37,6 +38,19 @@ node scripts/gen-key.js         # prints ED25519_PRIVATE_KEY and VITE_CERT_PUBLI
 npm run migrate
 npx vercel dev                  # client + api together
 ```
+
+### Testing the camera on a real phone
+
+Phones only allow the camera on **https**. On the same Wi-Fi as your laptop:
+
+```
+npx vercel dev                          # API on :3000
+npm run dev:phone --prefix client       # https://<laptop-ip>:5173 with a self-signed cert (accept the warning once)
+```
+
+Useful URL switches: `?debug=1` shows fps, render scale, quality tier and camera resolution; `?quality=low|high`
+overrides the device tier; `?ar=0` shows the 3D viewer instead of AR. If AR cannot start, the scenario screen says
+why (no https, permission denied, no camera, camera busy) and offers "Try camera again" where that can help.
 
 Deploying: see **[DEPLOY.md](DEPLOY.md)**. Tests:
 

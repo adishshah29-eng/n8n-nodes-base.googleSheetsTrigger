@@ -63,9 +63,10 @@ await step('   nothing reached the server while offline; both attempts wait in t
 await step('6. airplane mode off: attempts sync and "View certificate" appears on the same screen', async () => {
   await context.setOffline(false);
   await page.waitForSelector('a[href="/certificate"]', { timeout: 15000 });
-  const rows = await sql('SELECT passed, critical_fail, flag FROM attempts WHERE worker_id = $1 ORDER BY received_at', [workerId]);
+  // both arrive in one sync batch (same received_at), so compare as a set, not by time
+  const rows = await sql('SELECT passed, critical_fail, flag FROM attempts WHERE worker_id = $1 ORDER BY critical_fail DESC', [workerId]);
   assert.equal(rows.length, 2);
-  assert.deepEqual(rows.map((r) => r.critical_fail), [true, false]);
+  assert.deepEqual(rows.map((r) => [r.critical_fail, r.passed]), [[true, false], [false, true]]);
   assert.ok(rows.every((r) => r.flag === null), 'plausible, so not flagged');
   assert.equal((await sql('SELECT count(*)::int AS n FROM certificates WHERE worker_id = $1', [workerId]))[0].n, 1);
 });

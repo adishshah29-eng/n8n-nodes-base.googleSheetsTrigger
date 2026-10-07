@@ -40,17 +40,34 @@ await step('no marker in view: hint appears; long-press on the logo switches to 
   await browser.close();
 });
 
-await step('no camera available: falls back to the 2D stage and the scenario still plays', async () => {
+await step('no camera: falls back to the 3D viewer, says why, and the scenario still plays', async () => {
   const browser = await launch();
   const { page } = await enrolledPhone(browser);
   await page.goto(`${BASE}/scenario?id=fire-panel`);
   await page.waitForSelector('button:has-text("Continue")', { timeout: 60000 });
   assert.equal(await page.locator('.stage-ar').count(), 0);
-  assert.equal(await page.locator('.stage-flat').count(), 1);
+  assert.equal(await page.locator('.stage-viewer canvas, .stage-flat').count(), 1, 'a non-AR stage is showing');
+  const chip = page.locator('.stage-chip');
+  assert.equal(await chip.getAttribute('data-problem'), 'missing');
+  assert.match(await chip.innerText(), /No camera found/);
   await browser.close();
 });
 
-await step('?ar=0 forces the 2D stage even when a camera exists', async () => {
+await step('camera permission denied: the reason is shown with a retry button', async () => {
+  const browser = await launchWithCamera(feed);
+  const { page } = await enrolledPhone(browser); // no 'camera' permission granted in this context
+  await page.context().clearPermissions();
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('denied', 'NotAllowedError'));
+  });
+  await page.goto(`${BASE}/scenario?id=fire-panel`);
+  await page.waitForSelector('.stage-chip', { timeout: 60000 });
+  assert.equal(await page.locator('.stage-chip').getAttribute('data-problem'), 'denied');
+  assert.equal(await page.locator('.stage-chip button').count(), 1, 'offers "Try camera again"');
+  await browser.close();
+});
+
+await step('?ar=0 skips AR even when a camera exists', async () => {
   const browser = await launchWithCamera(feed);
   const { page } = await enrolledPhone(browser, { contextOptions: { permissions: ['camera'] } });
   await page.goto(`${BASE}/scenario?id=fire-panel&ar=0`);

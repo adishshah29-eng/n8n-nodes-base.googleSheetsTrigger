@@ -1,10 +1,15 @@
 import { el } from '../dom';
 import { icon } from '../icons';
 import type { Step } from '../engine/types';
-import type { Stage, StageEffect } from './types';
+import type { CameraProblem } from './camera';
+import type { Stage, StageEffect, StageInfo } from './types';
 
-/** 2D stage: a big picture on a dark background. Used with no camera, and as the AR fallback. */
+/** Last-resort 2D stage (a big picture) for phones without WebGL. */
 export class FlatStage implements Stage {
+  readonly info: StageInfo;
+  constructor(problem?: CameraProblem) {
+    this.info = { mode: 'flat', problem };
+  }
   private box = el('div', undefined, 'stage-flat');
   private picture = el('div', undefined, 'stage-picture');
 

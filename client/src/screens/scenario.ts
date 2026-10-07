@@ -64,6 +64,7 @@ export async function runScenario(
   const stage = await makeStage(scenario);
   await stage.mount(screen);
   panel.replaceChildren();
+  showStageStatus(screen, stage, lang);
 
   // --- marker tracking: pause the step timer once the marker has been lost for a moment ---
   let timer = null as PausableTimer | null; // assigned inside closures, so widen for TS
@@ -243,6 +244,32 @@ export async function runScenario(
   stage.destroy();
   if (!attempt.passed) void syncOutbox().catch(() => undefined); // a pass is synced by the result screen
   await renderResult(root, attempt, { onRetry: () => void runScenario(root, scenario, worker, makeStage) });
+}
+
+const CAMERA_TEXT = {
+  insecure: 'camInsecure', unsupported: 'camUnsupported', denied: 'camDenied',
+  missing: 'camMissing', busy: 'camBusy', failed: 'camFailed',
+} as const;
+
+/**
+ * When AR could not start, say why (in the worker's language) instead of silently showing 3D, and offer
+ * a retry where the worker can fix it (permission, a busy camera). The chip fades after a few seconds.
+ */
+function showStageStatus(screen: HTMLElement, stage: Stage, lang: Lang) {
+  const info = stage.info;
+  if (!info || info.mode === 'ar') return;
+  const chip = el('div', undefined, 'stage-chip');
+  chip.dataset.problem = info.problem ?? 'none';
+  if (info.problem) chip.append(el('span', `📷 ${t(lang, CAMERA_TEXT[info.problem])}`));
+  if (info.mode === 'viewer') chip.append(el('span', t(lang, 'dragToLook'), 'chip-hint'));
+  if (info.problem && ['denied', 'busy', 'failed'].includes(info.problem)) {
+    const retry = el('button', t(lang, 'camRetry'));
+    retry.onclick = () => location.reload(); // restarts this scenario with a fresh camera request
+    chip.append(retry);
+  } else {
+    setTimeout(() => chip.classList.add('fade'), 6000);
+  }
+  screen.append(chip);
 }
 
 /** /scenario?id=<scenario id> */

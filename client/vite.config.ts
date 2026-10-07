@@ -1,12 +1,19 @@
 import { defineConfig } from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   // content/ holds scenarios, audio, models and AR targets; serving it as the public dir
   // ships them with the build so the service worker can precache them.
   publicDir: '../content',
-  server: { fs: { allow: ['..'] } },
+  server: {
+    fs: { allow: ['..'] },
+    // `npm run dev:phone`: phones only allow the camera on https, so serve with a self-signed cert on the
+    // LAN and forward /api to `vercel dev` (or API_URL).
+    proxy: { '/api': process.env.API_URL ?? 'http://localhost:3000' },
+  },
   plugins: [
+    ...(process.env.HTTPS ? [basicSsl()] : []),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false, // src/offline.ts registers, so the UI can tell when precaching is done
