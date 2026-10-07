@@ -4,40 +4,26 @@
 //   npm run e2e                       all specs
 //   npm run e2e -- scenario ar        only specs whose name contains one of the words
 //
-// Needs: a local PostgreSQL you can CREATE DATABASE on (DATABASE_URL), and Chromium (CHROMIUM_PATH,
-// default /opt/pw-browsers/chromium).
+// Needs only Chromium (CHROMIUM_PATH, default /opt/pw-browsers/chromium). Storage is a throwaway
+// SQLite file, so there is no database server to set up.
 import { spawn, spawnSync } from 'node:child_process';
 import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import pg from 'pg';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const root = join(import.meta.dirname, '..');
 const args = process.argv.slice(2);
 const only = args.filter((a) => !a.startsWith('--'));
-const base = process.env.DATABASE_URL;
-if (!base) {
-  console.error('Set DATABASE_URL to a LOCAL Postgres (the runner creates and drops its own database on it).');
-  process.exit(2);
-}
-const u = new URL(base);
-if (!['localhost', '127.0.0.1', '::1', ''].includes(u.hostname)) {
-  console.error(`Refusing to run e2e against "${u.hostname}": it must be a local database.`);
-  process.exit(2);
-}
-
-const dbName = `aotan_e2e_${Date.now()}`;
-const admin = new pg.Client({ connectionString: base });
-await admin.connect();
-await admin.query(`CREATE DATABASE ${dbName}`);
-const dbUrl = new URL(base);
-dbUrl.pathname = `/${dbName}`;
+const tmp = mkdtempSync(join(tmpdir(), 'aotan-e2e-'));
+const dbFile = join(tmp, 'e2e.db');
 
 const { privateKey, publicKey } = generateKeyPairSync('ed25519');
 const spki = publicKey.export({ type: 'spki', format: 'der' });
 const env = {
   ...process.env,
-  DATABASE_URL: dbUrl.toString(),
+  DATABASE_PATH: dbFile,
   ED25519_PRIVATE_KEY: privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64'),
   VITE_CERT_PUBLIC_KEY: spki.subarray(spki.length - 32).toString('base64url'),
   ADMIN_PASSWORD: 'e2e-admin-password',
@@ -49,8 +35,7 @@ let server;
 let failed = [];
 const cleanup = async () => {
   server?.kill();
-  await admin.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`).catch(() => {});
-  await admin.end().catch(() => {});
+  rmSync(tmp, { recursive: true, force: true });
 };
 process.on('SIGINT', async () => (await cleanup(), process.exit(130)));
 
@@ -59,12 +44,8 @@ try {
     const r = spawnSync(cmd, a, { cwd: root, env, stdio: 'inherit', ...opts });
     if (r.status !== 0) throw new Error(`${cmd} ${a.join(' ')} failed`);
   };
-  console.log('• migrating throwaway database', dbName);
-  run('node', ['scripts/migrate.js']);
-  const sites = new pg.Client({ connectionString: env.DATABASE_URL });
-  await sites.connect();
-  await sites.query("INSERT INTO sites (name, district) VALUES ('E2E Mine', 'Test District')");
-  await sites.end();
+  console.log('• creating throwaway SQLite database', dbFile);
+  run('node', ['--no-warnings', 'scripts/migrate.js']);
 
   // Always rebuild: the certificate public key is baked into the client, and every run uses a fresh key.
   // (A stale build would correctly refuse to show certificates signed by a different key.)

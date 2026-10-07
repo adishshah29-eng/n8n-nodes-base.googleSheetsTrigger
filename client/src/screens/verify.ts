@@ -40,14 +40,18 @@ export async function renderVerify(root: HTMLElement, token = decodeURIComponent
 
   const { cert } = check;
   const status = await fetchStatus(cert.c);
-  if (status === 'not-found') return banner('Not valid — unknown certificate', 'bad');
+  // The signature (checked above) is what proves the certificate. A server that has no record of it was
+  // most likely reset (its storage is a file that can be wiped); the worker's phone restores it on its
+  // next sync. Say what we could not check rather than calling a genuine certificate invalid.
+  const unknown = status === 'not-found';
 
-  const revoked = status !== 'offline' && status.revoked;
+  const reachable = status !== 'offline' && status !== 'not-found';
+  const revoked = reachable && status.revoked;
   if (revoked) banner('Revoked', 'bad');
   else if (check.expired) banner('Expired', 'bad');
   else banner('Valid', 'ok');
 
-  if (status !== 'offline') {
+  if (reachable) {
     const { worker } = status;
     if (worker.photo?.startsWith('data:image/')) {
       const img = el('img', undefined, 'photo');
@@ -57,7 +61,9 @@ export async function renderVerify(root: HTMLElement, token = decodeURIComponent
     }
     card.append(el('h2', worker.name), el('p', `Employer ID ${worker.employerId}`));
   } else {
-    card.append(el('p', 'Signature checked on this device. Worker photo and revocation status need a connection.', 'note'));
+    card.append(el('p', unknown
+      ? 'Genuine Aotan certificate: signature checked. The server has no record of it right now, so the photo and revocation status cannot be shown.'
+      : 'Signature checked on this device. Worker photo and revocation status need a connection.', 'note'));
   }
 
   const list = el('ul');

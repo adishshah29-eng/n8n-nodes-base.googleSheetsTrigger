@@ -37,7 +37,7 @@ await step('empty submit is refused with a message', async () => {
 await step('offline enrollment explains it needs internet and keeps the form', async () => {
   await page.locator('input').nth(0).fill('Sunil Hembram');
   await page.locator('input').nth(1).fill('EMP-1042');
-  await page.locator('select').selectOption({ label: 'E2E Mine (Test District)' });
+  await page.locator('select').selectOption({ label: 'Gua Iron Ore Mine (West Singhbhum)' });
   await page.locator('input[type=file]').setInputFiles(selfiePng());
   await page.waitForSelector('img.photo:not([hidden])');
   await context.setOffline(true);

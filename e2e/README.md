@@ -1,16 +1,15 @@
 # End-to-end tests
 
-Real browser, real API handlers, real Postgres — the closest thing to the demo that runs unattended.
+Real browser, real API handlers, real SQLite storage — the closest thing to the demo that runs unattended.
 
 ```
-DATABASE_URL=postgres://postgres@localhost:5432/postgres npm run e2e
+npm run e2e
 npm run e2e -- demo            # only specs whose file name contains "demo"
 ```
 
-The runner (`run.mjs`) creates a throwaway database on the local server you point it at, makes a fresh
-signing key, builds the client with the matching public key, starts `server.mjs` (a small stand-in for
-`vercel dev` that routes the real files in `api/`), runs each spec in `specs/`, then drops the database.
-It refuses non-local databases.
+The runner (`run.mjs`) creates a throwaway SQLite file, makes a fresh signing key, builds the client with
+the matching public key, starts `server.mjs` (a small stand-in for `vercel dev` that routes the real files in
+`api/` and applies the `vercel.json` rewrites), runs each spec in `specs/`, then deletes the file.
 
 | Spec | Covers |
 | --- | --- |

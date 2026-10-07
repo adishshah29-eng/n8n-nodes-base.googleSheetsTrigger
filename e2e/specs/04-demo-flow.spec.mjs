@@ -50,7 +50,7 @@ await step('5. try again: correct choice and the P-A-S-S sequence -> pass, certi
 });
 
 await step('   nothing reached the server while offline; both attempts wait in the outbox', async () => {
-  assert.equal((await sql('SELECT count(*)::int AS n FROM attempts WHERE worker_id = $1', [workerId]))[0].n, 0);
+  assert.equal((await sql('SELECT count(*) AS n FROM attempts WHERE worker_id = ?', [workerId]))[0].n, 0);
   const queued = await page.evaluate(async () => {
     const db = await new Promise((res) => { const r = indexedDB.open('aotan'); r.onsuccess = () => res(r.result); });
     const n = await new Promise((res) => { const q = db.transaction('outbox').objectStore('outbox').count(); q.onsuccess = () => res(q.result); });
@@ -64,11 +64,11 @@ await step('6. airplane mode off: attempts sync and "View certificate" appears o
   await context.setOffline(false);
   await page.waitForSelector('a[href="/certificate"]', { timeout: 15000 });
   // both arrive in one sync batch (same received_at), so compare as a set, not by time
-  const rows = await sql('SELECT passed, critical_fail, flag FROM attempts WHERE worker_id = $1 ORDER BY critical_fail DESC', [workerId]);
+  const rows = await sql('SELECT passed, critical_fail, flag FROM attempts WHERE worker_id = ? ORDER BY critical_fail DESC', [workerId]);
   assert.equal(rows.length, 2);
   assert.deepEqual(rows.map((r) => [r.critical_fail, r.passed]), [[true, false], [false, true]]);
   assert.ok(rows.every((r) => r.flag === null), 'plausible, so not flagged');
-  assert.equal((await sql('SELECT count(*)::int AS n FROM certificates WHERE worker_id = $1', [workerId]))[0].n, 1);
+  assert.equal((await sql('SELECT count(*) AS n FROM certificates WHERE worker_id = ?', [workerId]))[0].n, 1);
 });
 
 await step('7. the certificate screen shows a QR that decodes to the verify URL', async () => {

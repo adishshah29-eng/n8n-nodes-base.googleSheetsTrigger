@@ -9,14 +9,12 @@
   "scripts": {
     "dev": "vercel dev",
     "migrate": "node scripts/migrate.js",
-    "test": "node --test --test-concurrency=1 \"test/*.test.js\"",
+    "test": "node --no-warnings --test --test-concurrency=1 \"test/*.test.js\"",
     "audio:script": "node scripts/audio-manifest.js",
     "audio:check": "node scripts/audio-manifest.js --check",
     "budget": "node scripts/check-budget.js",
-    "e2e": "node e2e/run.mjs"
-  },
-  "dependencies": {
-    "pg": "^8.13.0"
+    "e2e": "node e2e/run.mjs",
+    "seed": "node scripts/seed-demo.js"
   },
   "devDependencies": {
     "jsqr": "^1.4.0",

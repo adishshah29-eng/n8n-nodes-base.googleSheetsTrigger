@@ -1,25 +1,23 @@
 # Deploying Aotan on Vercel
 
-One Vercel project serves everything: the PWA (`client/`, static) and the API (`api/`, plain Node.js
-functions). `vercel.json` already wires this up. You need a Vercel account and a Postgres database.
+One Vercel project serves everything: the PWA (`client/`, static) and the API (one plain Node.js function,
+`api/index.js`). `vercel.json` already wires this up. **No database server is needed**: storage is a SQLite
+file, using the SQLite built into Node.
 
-## 1. Database
+## 1. Storage (nothing to set up)
 
-Create a Postgres database. Neon or Vercel Postgres both work; use the **pooled** connection string,
-because each serverless function instance opens its own connection (`lib/db.js` caps it at one).
-Put it in the Vercel project as `DATABASE_URL` (Settings → Environment Variables, for Production),
-then **redeploy**: environment variables only apply to deployments made after you set them.
+- **On Vercel** the file is `/tmp/aotan.db`, the only writable place. Vercel wipes `/tmp` when the function
+  goes idle and restarts. That is safe for the demo, because the **phone is the durable copy**. Every sync
+  re-sends the worker's profile, photo and certificates. If the server had lost them, the phone re-sends
+  all its attempts too. Device tokens are signed, so they stay valid across a reset.
+  What does *not* survive a restart: the admin dashboard's history (until phones sync again) and
+  revocations. Set `SEED_DEMO=1` so the dashboard always has demo data after a restart.
+- **On a normal server or laptop** the file is `data/aotan.db` and is kept. `DATABASE_PATH` overrides
+  the location.
+- Sites for the enrollment form come from `content/sites.json`: edit it and redeploy.
 
-You do not need to run migrations by hand: the API creates and updates its tables on first use.
-Check it with `https://<your-domain>/api/health?db=1`:
-
-| Response | Meaning |
-| --- | --- |
-| `{"ok":true,"db":"ok","migrations":2}` | ready |
-| `database not configured` | `DATABASE_URL` is missing from the Vercel project (or you did not redeploy after adding it) |
-| `cannot reach the database` | wrong host in `DATABASE_URL` |
-| `database login rejected` | wrong user or password in `DATABASE_URL` |
-| `database SSL problem` | add `?sslmode=require` to the end of `DATABASE_URL` |
+Check it with `https://<your-domain>/api/health`. It shows the storage path, whether it is ephemeral, and
+row counts.
 
 ## 2. Keys and secrets
 
@@ -31,13 +29,13 @@ prints two lines. **Keep `ED25519_PRIVATE_KEY` private**: anyone who has it can 
 
 | Variable | Where | Value |
 | --- | --- | --- |
-| `DATABASE_URL` | Vercel env (server) | pooled Postgres URL |
 | `ED25519_PRIVATE_KEY` | Vercel env (server) | from `gen-key.js` |
 | `VITE_CERT_PUBLIC_KEY` | Vercel env (**build**) | from `gen-key.js`; baked into the client at build time |
 | `ADMIN_PASSWORD` | Vercel env (server) | long random password for `/admin` |
 | `ADMIN_JWT_SECRET` | Vercel env (server) | long random string, e.g. `openssl rand -hex 32` |
 | `VITE_VERIFY_BASE_URL` | Vercel env (build), optional | `https://aotan.arovat.com`, so the QR always points at the public domain |
 | `CERT_VALIDITY_MONTHS` | Vercel env (server), optional | default 12 (our assumption, not a DGMS rule) |
+| `SEED_DEMO` | Vercel env (server), optional | `1`: fill a fresh database with demo data for the dashboard |
 
 Rotating the signing key invalidates every certificate issued under the old key, and the client must be
 rebuilt (redeploy) so `VITE_CERT_PUBLIC_KEY` matches.
@@ -50,16 +48,14 @@ rebuilt (redeploy) so `VITE_CERT_PUBLIC_KEY` matches.
 
 Camera access (AR) and service workers need **HTTPS**, which Vercel provides.
 
-Function count: the API is 7 functions (all admin endpoints share `api/admin.js`, reached through a rewrite in `vercel.json`),
-inside the Hobby plan's limit of 12.
+All of `/api/*` is one function (`api/index.js`, reached through a rewrite in `vercel.json`), so every
+request shares the same SQLite file. Separate functions would each get their own `/tmp`.
 
 ## 4. After the first deploy
 
-- `curl https://<domain>/api/health` returns `{"ok":true}`.
-- Add your sites: `INSERT INTO sites (name, district) VALUES ('Gua Iron Ore Mine', 'West Singhbhum');`
-  (the enrollment form shows a site dropdown only when sites exist).
-- Optional demo data for the dashboard: `DATABASE_URL=… ED25519_PRIVATE_KEY=… node scripts/seed-demo.js`
-  (add `--reset` only on an empty/demo database: it truncates the tables).
+- `https://<domain>/api/health` returns `{"ok":true,"storage":"sqlite",...}`.
+- If enrollment says the server is not ready, the response names what is missing (usually
+  `ED25519_PRIVATE_KEY`).
 - Open `/admin`, log in, check the Overview.
 - Install the app on a phone over Wi-Fi, wait for **Ready offline**, then try airplane mode.
 
@@ -79,11 +75,11 @@ inside the Hobby plan's limit of 12.
 ```
 npm i && npm i --prefix client
 cp .env.example .env            # fill in values
-npm run migrate
-npx vercel dev                  # client + api together
-npm test                        # server tests; DATABASE_URL must be a local, disposable database
+npx vercel dev                  # client + api together (data in data/aotan.db)
+npm run seed                    # optional: demo data for the dashboard
+npm test                        # server tests (each uses its own temporary SQLite file)
 npm test --prefix client        # client unit tests
-npm run e2e                     # full browser run (needs local Postgres + Chromium), see e2e/README.md
+npm run e2e                     # full browser run (needs only Chromium), see e2e/README.md
 npm run budget                  # after building the client: asset size limits
 ```
 

@@ -39,6 +39,7 @@ async function boot() {
 
   if (location.pathname === '/certificate') {
     const { renderCertificate } = await import('./screens/certificate');
+    void syncOutbox(); // showing the QR: make sure the server knows this certificate and photo for the verifier
     await renderCertificate(root);
     window.addEventListener('online', () => void syncOutbox().then(() => renderCertificate(root)));
     return;

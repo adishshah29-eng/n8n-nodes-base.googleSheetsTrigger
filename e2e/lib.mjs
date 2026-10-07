@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import pg from 'pg';
+import { DatabaseSync } from 'node:sqlite';
 import { chromium } from 'playwright-core';
 import { PNG } from 'pngjs';
 
@@ -31,13 +31,21 @@ export const launch = (opts = {}) => chromium.launch({ executablePath: EXE, ...o
 export const launchWithCamera = (feed) =>
   launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-video-capture=${feed}`, '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 
+/**
+ * Reads the server's SQLite file (DATABASE_PATH, shared with the server process; WAL mode allows it).
+ * Booleans come back as booleans and JSON columns parsed, like the API returns them.
+ */
 export async function sql(query, params = []) {
-  const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
-  await c.connect();
+  const db = new DatabaseSync(process.env.DATABASE_PATH);
   try {
-    return (await c.query(query, params)).rows;
+    return db.prepare(query).all(...params).map((r) => {
+      const o = { ...r };
+      for (const k of ['passed', 'critical_fail']) if (k in o) o[k] = !!o[k];
+      for (const k of ['steps', 'scenarios']) if (typeof o[k] === 'string') o[k] = JSON.parse(o[k]);
+      return o;
+    });
   } finally {
-    await c.end();
+    db.close();
   }
 }
 
@@ -53,16 +61,18 @@ export async function enrollViaApi(name, lang = 'en', photo = PHOTO) {
  * in the page's IndexedDB exactly as the enrollment screen would have stored it.
  */
 export async function enrolledPhone(browser, { name = 'E2E Worker', lang = 'en', contextOptions = {}, photo } = {}) {
-  const w = await enrollViaApi(name, lang, photo);
+  const w = await enrollViaApi(name, lang, photo ?? PHOTO);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, ...contextOptions });
   const page = await context.newPage();
   page.on('pageerror', (e) => console.log('    PAGE ERROR:', e.message));
   await page.goto(`${BASE}/`); // creates the Dexie database
-  await page.evaluate(async ({ w, name, lang }) => {
+  await page.evaluate(async ({ w, name, lang, photo }) => {
     const db = await new Promise((res, rej) => { const r = indexedDB.open('aotan'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    await new Promise((res, rej) => { const tx = db.transaction('worker', 'readwrite'); tx.objectStore('worker').put({ id: w.id, deviceToken: w.deviceToken, name, lang }); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    // exactly what the enrollment screen stores, including the profile the phone keeps for restores
+    const worker = { id: w.id, deviceToken: w.deviceToken, name, lang, employerId: 'E2E-1', siteId: null, photo };
+    await new Promise((res, rej) => { const tx = db.transaction('worker', 'readwrite'); tx.objectStore('worker').put(worker); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
     db.close();
-  }, { w, name, lang });
+  }, { w, name, lang, photo: photo ?? PHOTO });
   return { page, context, workerId: w.id, deviceToken: w.deviceToken };
 }
 

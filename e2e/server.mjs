@@ -24,7 +24,9 @@ async function loadRoutes() {
         return p.replace(/[.*+?^${}()|\\]/g, '\\$&');
       });
       const catchAll = parts.some((p) => p.startsWith('[...'));
-      routes.push({ re: new RegExp(`^/api/${re.join('/')}/?$`), names, file: join(dir, e.name), specificity: catchAll ? 0 : parts.length + 1 });
+      // index.js answers at its folder AND at .../index, like on Vercel
+      const path = ['', 'api', ...re].join('/') + (base === 'index' ? '(?:/index)?' : '');
+      routes.push({ re: new RegExp(`^${path}/?$`), names, file: join(dir, e.name), specificity: catchAll ? 0 : parts.length + 1 });
     }
   };
   await walk(join(ROOT, 'api'), []);

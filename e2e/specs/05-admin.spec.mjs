@@ -9,7 +9,7 @@ await step('seed script fills the database', async () => {
   const r = spawnSync('node', ['scripts/seed-demo.js'], { env: process.env, cwd: new URL('../..', import.meta.url).pathname, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /seeded: 24 workers/);
-  assert.ok((await sql('SELECT count(*)::int AS n FROM certificates WHERE revoked_at IS NOT NULL'))[0].n >= 1);
+  assert.ok((await sql('SELECT count(*) AS n FROM certificates WHERE revoked_at IS NOT NULL'))[0].n >= 1);
 });
 
 const browser = await launch();
@@ -32,7 +32,7 @@ await step('overview: counts, pass-rate chart and wrong-first-choice chart', asy
   const stats = await page.locator('.stat-n').allInnerTexts();
   assert.ok(+stats[0] >= 24, 'workers enrolled');
   assert.ok(+stats[2] > 0, 'attempts counted');
-  const [{ n }] = await sql('SELECT count(*)::int AS n FROM workers');
+  const [{ n }] = await sql('SELECT count(*) AS n FROM workers');
   assert.equal(+stats[0], n);
 });
 
@@ -41,7 +41,7 @@ await step('scenario filter narrows the overview', async () => {
   await page.locator('select').nth(1).selectOption('conveyor-loto');
   await page.waitForFunction((b) => document.querySelectorAll('.stat-n')[2]?.textContent !== b, before);
   const after = +(await page.locator('.stat-n').allInnerTexts())[2];
-  const [{ n }] = await sql("SELECT count(*)::int AS n FROM attempts WHERE scenario_id='conveyor-loto' AND flag IS NULL");
+  const [{ n }] = await sql("SELECT count(*) AS n FROM attempts WHERE scenario_id='conveyor-loto' AND flag IS NULL");
   assert.equal(after, n);
   await page.locator('select').nth(1).selectOption('');
 });
@@ -49,7 +49,7 @@ await step('scenario filter narrows the overview', async () => {
 await step('workers page lists everyone with certificate status', async () => {
   await page.locator('nav a:has-text("Workers")').click();
   await page.waitForSelector('tbody tr');
-  const [{ n }] = await sql('SELECT count(*)::int AS n FROM workers');
+  const [{ n }] = await sql('SELECT count(*) AS n FROM workers');
   assert.equal(await page.locator('tbody tr').count(), n);
   const badges = new Set(await page.locator('tbody .badge').allInnerTexts());
   assert.ok(badges.has('valid') && badges.has('revoked'));
@@ -68,12 +68,12 @@ await step('attempt detail shows every choice in order', async () => {
 await step('certificates: search and revoke from the UI', async () => {
   await page.locator('nav a:has-text("Certificates")').click();
   await page.waitForFunction(() => document.querySelector('button.danger'));
-  const valid = (await sql('SELECT count(*)::int AS n FROM certificates WHERE revoked_at IS NULL AND expires_at > now()'))[0].n;
+  const valid = (await sql('SELECT count(*) AS n FROM certificates WHERE revoked_at IS NULL AND expires_at > ?', [new Date().toISOString()]))[0].n;
   assert.equal(await page.locator('button.danger').count(), valid);
   page.once('dialog', (d) => d.accept());
   await page.locator('button.danger').first().click();
   await page.waitForFunction((v) => document.querySelectorAll('button.danger').length === v - 1, valid);
-  assert.equal((await sql('SELECT count(*)::int AS n FROM certificates WHERE revoked_at IS NULL AND expires_at > now()'))[0].n, valid - 1);
+  assert.equal((await sql('SELECT count(*) AS n FROM certificates WHERE revoked_at IS NULL AND expires_at > ?', [new Date().toISOString()]))[0].n, valid - 1);
   await page.locator('input[type=search]').fill('EMP-1000');
   await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 1);
   await page.locator('input[type=search]').fill('');
@@ -82,7 +82,7 @@ await step('certificates: search and revoke from the UI', async () => {
 await step('CSV export downloads one row per counted attempt', async () => {
   const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('button:has-text("Export")').click()]);
   const lines = readFileSync(await dl.path(), 'utf8').trim().split('\r\n');
-  const [{ n }] = await sql('SELECT count(*)::int AS n FROM attempts WHERE flag IS NULL');
+  const [{ n }] = await sql('SELECT count(*) AS n FROM attempts WHERE flag IS NULL');
   assert.equal(lines.length - 1, n);
   assert.match(lines[0], /^attempt_id,received_at/);
 });

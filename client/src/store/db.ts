@@ -6,6 +6,11 @@ export interface WorkerProfile {
   deviceToken: string;
   name: string;
   lang: 'sat' | 'hi' | 'en';
+  // Kept on the phone so it can restore itself on a server that lost its data, or re-register.
+  // Optional: installs from before this was stored do not have them.
+  employerId?: string;
+  siteId?: number | null;
+  photo?: string;
 }
 
 export interface Attempt {

@@ -27,11 +27,11 @@ await step('electrical fire: wrong try, retry, PASS sequence -> certificate, bot
   assert.ok(Date.now() - t0 > 2000, 'the outcome (fire going out) is shown before the result screen');
   assert.match(await text(page), /Well done[\s\S]*70/);
   await page.waitForSelector('a[href="/certificate"]', { timeout: 10000 });
-  const [a] = await sql('SELECT passed, score, flag, steps FROM attempts WHERE worker_id = $1', [workerId]);
+  const [a] = await sql('SELECT passed, score, flag, steps FROM attempts WHERE worker_id = ?', [workerId]);
   assert.deepEqual([a.passed, a.score, a.flag], [true, 70, null]);
   const s2 = a.steps.find((s) => s.stepId === 's2');
   assert.deepEqual([s2.choices, s2.tries], [['run', 'alarm'], 2]);
-  assert.equal((await sql('SELECT count(*)::int AS n FROM certificates WHERE worker_id = $1', [workerId]))[0].n, 1);
+  assert.equal((await sql('SELECT count(*) AS n FROM certificates WHERE worker_id = ?', [workerId]))[0].n, 1);
 });
 
 await step('critical mistake (water): consequence in Hindi, red result, recorded as critical', async () => {
@@ -45,9 +45,9 @@ await step('critical mistake (water): consequence in Hindi, red result, recorded
   await page.waitForSelector('.banner.bad');
   assert.match(await text(page), /गंभीर गलती/);
   await page.waitForTimeout(1500);
-  const [a] = await sql('SELECT passed, critical_fail, score FROM attempts WHERE worker_id = $1', [workerId]);
+  const [a] = await sql('SELECT passed, critical_fail, score FROM attempts WHERE worker_id = ?', [workerId]);
   assert.deepEqual([a.passed, a.critical_fail, a.score], [false, true, 0]);
-  assert.equal((await sql('SELECT count(*)::int AS n FROM certificates WHERE worker_id = $1', [workerId]))[0].n, 0);
+  assert.equal((await sql('SELECT count(*) AS n FROM certificates WHERE worker_id = ?', [workerId]))[0].n, 0);
 });
 
 await step('running out of time counts as a wrong try and replays the step', async () => {
@@ -75,7 +75,7 @@ await step('conveyor lock-out/tag-out: full pass scores 100', async () => {
   await page.waitForSelector('.banner', { timeout: 15000 });
   assert.match(await text(page), /Well done[\s\S]*100/);
   await page.waitForSelector('a[href="/certificate"]', { timeout: 10000 });
-  const [a] = await sql('SELECT scenario_id, passed, score, flag FROM attempts WHERE worker_id = $1', [workerId]);
+  const [a] = await sql('SELECT scenario_id, passed, score, flag FROM attempts WHERE worker_id = ?', [workerId]);
   assert.deepEqual([a.scenario_id, a.passed, a.score, a.flag], ['conveyor-loto', true, 100, null]);
 });
 

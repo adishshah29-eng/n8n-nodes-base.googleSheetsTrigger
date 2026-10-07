@@ -3,14 +3,14 @@
   "buildCommand": "npm run build --prefix client",
   "outputDirectory": "client/dist",
   "functions": {
-    "api/**/*.js": {
-      "includeFiles": "{content/scenarios/**,db/migrations/**}"
+    "api/index.js": {
+      "includeFiles": "{content/scenarios/**,content/sites.json,db/migrations/**}"
     }
   },
   "rewrites": [
     {
-      "source": "/api/admin/:path*",
-      "destination": "/api/admin?path=:path*"
+      "source": "/api/:path*",
+      "destination": "/api/index?path=:path*"
     },
     {
       "source": "/((?!api/).*)",
