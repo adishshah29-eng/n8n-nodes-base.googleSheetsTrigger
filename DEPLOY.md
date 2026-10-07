@@ -43,7 +43,7 @@ rebuilt (redeploy) so `VITE_CERT_PUBLIC_KEY` matches.
 
 Camera access (AR) and service workers need **HTTPS**, which Vercel provides.
 
-Function count: the API is 7 functions (admin endpoints share one catch-all `api/admin/[...path].js`),
+Function count: the API is 7 functions (all admin endpoints share `api/admin.js`, reached through a rewrite in `vercel.json`),
 inside the Hobby plan's limit of 12.
 
 ## 4. After the first deploy

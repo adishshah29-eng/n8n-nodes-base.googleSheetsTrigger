@@ -32,6 +32,30 @@ async function loadRoutes() {
 }
 
 const routes = await loadRoutes();
+
+// vercel.json rewrites for /api (e.g. /api/admin/:path* -> /api/admin?path=:path*), applied like Vercel
+// does when no file matches, so the tests exercise the same routing as production.
+const vercel = JSON.parse(await readFile(join(ROOT, 'vercel.json'), 'utf8'));
+const apiRewrites = (vercel.rewrites ?? [])
+  .filter((r) => r.source.startsWith('/api/'))
+  .map((r) => {
+    const names = [];
+    const re = r.source.replace(/:(\w+)\*/g, (_, n) => (names.push(n), '(.*)')).replace(/:(\w+)/g, (_, n) => (names.push(n), '([^/]+)'));
+    return { re: new RegExp(`^${re}$`), names, destination: r.destination };
+  });
+function rewrite(url) {
+  if (routes.some((x) => x.re.test(url.pathname))) return url;
+  for (const r of apiRewrites) {
+    const m = url.pathname.match(r.re);
+    if (!m) continue;
+    let dest = r.destination;
+    r.names.forEach((n, i) => (dest = dest.replace(new RegExp(`:${n}\\*?`, 'g'), m[i + 1])));
+    const out = new URL(dest, url);
+    url.searchParams.forEach((v, k) => out.searchParams.set(k, v)); // Vercel keeps the original query
+    return out;
+  }
+  return url;
+}
 const modules = new Map();
 const handlerFor = async (file) => {
   if (!modules.has(file)) modules.set(file, (await import(pathToFileURL(file).href)).default);
@@ -39,8 +63,9 @@ const handlerFor = async (file) => {
 };
 
 http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
+  let url = new URL(req.url, 'http://localhost');
   if (url.pathname.startsWith('/api/')) {
+    url = rewrite(url);
     const r = routes.find((x) => x.re.test(url.pathname));
     if (!r) return res.writeHead(404, { 'content-type': 'application/json' }).end('{"error":"no such route"}');
     const m = url.pathname.match(r.re);
