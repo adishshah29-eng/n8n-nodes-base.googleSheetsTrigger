@@ -1,28 +1,55 @@
 # Aotan
 
-AR safety-training prototype: scenarios run offline in a PWA, results sync to a server that issues Ed25519-signed QR certificates.
+AR safety training that runs offline on a cheap Android phone, in the worker's own language, and ends in a
+signed QR certificate anyone can verify. Prototype for the demo described in the implementation plan.
 
 ```
-client/    PWA (worker app + /admin) — Vite + TypeScript, MindAR, three.js, Dexie
-api/       Vercel serverless functions — plain Node.js, no framework
-lib/       shared server code (db)
-db/        SQL migrations
-scripts/   migrate.js
-content/   scenarios (JSON), compiled AR targets, 3D models, audio clips
-markers/   printable A4 marker PDFs
+client/      PWA: worker app, certificate + verify pages, /admin dashboard   (Vite + TypeScript, MindAR, three.js, Dexie)
+api/         Vercel serverless functions, plain Node.js (no framework)
+lib/         shared server code: db, signing, certificates, plausibility, admin router
+db/          SQL migrations
+content/     scenarios (JSON), gestures, compiled AR targets, audio clips, icons
+markers/     printable A4 markers (PDF) + the images they were compiled from
+scripts/     migrate, gen-key, seed-demo, audio script/check, asset budget
+e2e/         full-browser tests, including the 3-minute demo script
 ```
 
-## Run
+## What works
+
+- **Worker app**: language picker (each button spoken in its own language), enrollment with selfie, home with a
+  "Ready offline" badge that only turns green when the install is really complete.
+- **Scenarios** (data files in `content/scenarios/`): electrical panel fire, conveyor lock-out/tag-out. Choice cards
+  (tap once to hear, again to choose), timed steps, wrong-choice feedback, critical mistakes, P-A-S-S / LOTO action
+  sequences. In **AR** on the printed marker (MindAR + three.js, procedural fire/smoke), or a **2D** fallback when
+  there is no camera. Long-press the logo for no-marker mode.
+- **Offline-first**: attempts queue in IndexedDB and sync on reconnect; the server upserts by attempt id.
+- **Certificates**: the server checks plausibility, signs with Ed25519; the QR opens `/v#<token>`, which verifies the
+  signature on the device (works offline) and, online, shows revocation status and the worker's photo.
+- **Admin** (`/admin`): pass rate per scenario, most common wrong first choice, workers, attempt detail, certificate
+  search/revoke, CSV export.
+
+## Run it
 
 ```
 npm i && npm i --prefix client
-cp .env.example .env        # set DATABASE_URL (Neon / Vercel Postgres)
-node scripts/gen-key.js     # prints ED25519_PRIVATE_KEY (server env) and VITE_CERT_PUBLIC_KEY (client env)
+cp .env.example .env            # DATABASE_URL, ED25519_PRIVATE_KEY, ADMIN_PASSWORD, ADMIN_JWT_SECRET
+node scripts/gen-key.js         # prints ED25519_PRIVATE_KEY and VITE_CERT_PUBLIC_KEY
 npm run migrate
-npm test                    # needs DATABASE_URL pointing at a disposable DB
-npx vercel dev              # serves client + api/ together
+npx vercel dev                  # client + api together
 ```
 
-Deploy: import the repo in Vercel; `vercel.json` builds `client/` and serves `api/` as functions. Set `DATABASE_URL` and `ED25519_PRIVATE_KEY` in project env vars, and `VITE_CERT_PUBLIC_KEY` for the client build (it is baked in at build time, so changing the key needs a redeploy). `CERT_VALIDITY_MONTHS` is optional (default 12).
+Deploying: see **[DEPLOY.md](DEPLOY.md)**. Tests:
 
-See the implementation plan for scope and schedule.
+```
+npm test                        # server (needs a LOCAL, disposable DATABASE_URL)
+npm test --prefix client        # client unit tests
+npm run e2e                     # real browser end to end, see e2e/README.md
+npm run budget                  # asset size limits, after building the client
+```
+
+## Still needed from people (not code)
+
+- Real marker photos of the actual panel/conveyor (the shipped markers are generated placeholders).
+- Voice recordings: `content/audio/RECORDING_SCRIPT.md` lists all 111 clips; `npm run audio:check` tracks progress.
+- Native Santali on-screen text (the UI shows Hindi until then) and a native review of the Hindi text.
+- Testing on real phones: camera tracking under real light, glare on laminated markers, battery and heat.

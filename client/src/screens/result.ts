@@ -61,11 +61,15 @@ export async function renderResult(root: HTMLElement, attempt: Attempt, opts: Re
 
   if (await certificateCovering(attempt.scenarioId)) return showCertificate(true);
   showCertificate(false);
-  if (!navigator.onLine) return;
 
-  status.replaceChildren(el('p', t(lang, 'syncing'), 'note'));
-  await syncOutbox().catch(() => undefined);
-  showCertificate(!!(await certificateCovering(attempt.scenarioId)));
+  const syncNow = async () => {
+    status.replaceChildren(el('p', t(lang, 'syncing'), 'note'));
+    await syncOutbox().catch(() => undefined);
+    showCertificate(!!(await certificateCovering(attempt.scenarioId)));
+  };
+  if (navigator.onLine) await syncNow();
+  // Airplane mode: stay on this screen, and the moment the phone is back online fetch the certificate.
+  else window.addEventListener('online', () => void syncNow(), { once: true });
 }
 
 /** /result?id=<attempt id> — reopen a saved result. */

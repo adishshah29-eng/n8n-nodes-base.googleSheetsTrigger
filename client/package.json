@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "markers": "node scripts/make-markers.mjs",
-    "targets": "node scripts/compile-targets.mjs"
+    "targets": "node scripts/compile-targets.mjs",
+    "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-ol-chiki": "^5.3.0",

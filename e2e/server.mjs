@@ -1,0 +1,62 @@
+// A small stand-in for `vercel dev`: serves client/dist and routes /api/* to the real files in api/,
+// using Vercel's file-based routing ([id] params, [...catch-all], index.js). Used by the e2e tests.
+import http from 'node:http';
+import { readFile, readdir } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const ROOT = join(fileURLToPath(import.meta.url), '../..');
+const DIST = join(ROOT, 'client/dist');
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/json', '.woff2': 'font/woff2', '.woff': 'font/woff', '.mp3': 'audio/mpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
+
+async function loadRoutes() {
+  const routes = [];
+  const walk = async (dir, segs) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) { await walk(join(dir, e.name), [...segs, e.name]); continue; }
+      if (!e.name.endsWith('.js')) continue;
+      const base = e.name.slice(0, -3);
+      const parts = base === 'index' ? segs : [...segs, base];
+      const names = [];
+      const re = parts.map((p) => {
+        if (p.startsWith('[...')) { names.push(p.slice(4, -1)); return '.*'; }
+        if (p.startsWith('[')) { names.push(p.slice(1, -1)); return '([^/]+)'; }
+        return p.replace(/[.*+?^${}()|\\]/g, '\\$&');
+      });
+      const catchAll = parts.some((p) => p.startsWith('[...'));
+      routes.push({ re: new RegExp(`^/api/${re.join('/')}/?$`), names, file: join(dir, e.name), specificity: catchAll ? 0 : parts.length + 1 });
+    }
+  };
+  await walk(join(ROOT, 'api'), []);
+  return routes.sort((a, b) => b.specificity - a.specificity);
+}
+
+const routes = await loadRoutes();
+const modules = new Map();
+const handlerFor = async (file) => {
+  if (!modules.has(file)) modules.set(file, (await import(pathToFileURL(file).href)).default);
+  return modules.get(file);
+};
+
+http.createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://localhost');
+  if (url.pathname.startsWith('/api/')) {
+    const r = routes.find((x) => x.re.test(url.pathname));
+    if (!r) return res.writeHead(404, { 'content-type': 'application/json' }).end('{"error":"no such route"}');
+    const m = url.pathname.match(r.re);
+    req.query = { ...Object.fromEntries(url.searchParams), ...Object.fromEntries(r.names.map((n, i) => [n, m[i + 1]])) };
+    let raw = '';
+    for await (const c of req) raw += c;
+    try { req.body = raw ? JSON.parse(raw) : undefined; } catch { return res.writeHead(400).end('{"error":"bad json"}'); }
+    res.status = (c) => { res.statusCode = c; return res; };
+    res.json = (o) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(o)); };
+    res.send = (t) => res.end(t);
+    try { await (await handlerFor(r.file))(req, res); } catch (e) { console.error('handler error:', e); res.statusCode = 500; res.end('{"error":"server error"}'); }
+    return;
+  }
+  let file = join(DIST, url.pathname);
+  let body = url.pathname.endsWith('/') ? null : await readFile(file).catch(() => null);
+  if (!body) { file = join(DIST, 'index.html'); body = await readFile(file); } // SPA fallback
+  res.setHeader('content-type', MIME[extname(file)] ?? 'application/octet-stream');
+  res.end(body);
+}).listen(Number(process.env.E2E_PORT ?? 4180), () => console.log('e2e server ready'));
