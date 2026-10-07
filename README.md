@@ -18,6 +18,7 @@ markers/   printable A4 marker PDFs
 npm i && npm i --prefix client
 cp .env.example .env        # set DATABASE_URL (Neon / Vercel Postgres)
 npm run migrate
+npm test                    # needs DATABASE_URL pointing at a disposable DB
 npx vercel dev              # serves client + api/ together
 ```
 

@@ -20,9 +20,19 @@ export async function syncOutbox(): Promise<void> {
     });
     if (!res.ok) return; // keep the outbox; try again on the next open/online event
 
-    const body = (await res.json()) as { certificates?: { id: string; token: string }[] };
+    const body = (await res.json()) as {
+      synced?: string[];
+      rejected?: { id: string | null }[];
+      certificates?: { id: string; token: string }[];
+    };
+    // Rejected attempts are malformed and will never be accepted; drop them too
+    // so one bad item cannot block the queue.
+    const done = [...(body.synced ?? []), ...(body.rejected ?? []).map((r) => r.id)].filter(
+      (id): id is string => !!id,
+    );
+    if (done.length === 0) return; // nothing acknowledged; avoid a tight retry loop
     await db.transaction('rw', db.outbox, db.certificates, async () => {
-      await db.outbox.bulkDelete(items.map((i) => i.attemptId));
+      await db.outbox.bulkDelete(done);
       if (body.certificates?.length) await db.certificates.bulkPut(body.certificates);
     });
   }
