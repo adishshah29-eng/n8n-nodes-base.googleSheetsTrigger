@@ -28,7 +28,7 @@ await step('no marker in view: hint appears; long-press on the logo switches to 
   const { page } = await enrolledPhone(browser, { contextOptions: { permissions: ['camera'] } });
   await page.goto(`${BASE}/scenario?id=fire-panel`);
   await page.waitForSelector('.stage-ar canvas', { timeout: 60000 });
-  await page.waitForSelector('.tracking-hint:not([hidden])', { timeout: 5000 });
+  await page.waitForSelector('.tracking-hint:not([hidden])', { timeout: 20000 }); // 1.5 s grace + a slow software-GL start
   assert.equal(await tracking(page), 'lost');
   const box = await page.locator('.logo').boundingBox();
   await page.mouse.move(box.x + 5, box.y + 5);

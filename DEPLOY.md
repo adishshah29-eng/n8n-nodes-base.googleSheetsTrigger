@@ -7,12 +7,19 @@ functions). `vercel.json` already wires this up. You need a Vercel account and a
 
 Create a Postgres database. Neon or Vercel Postgres both work; use the **pooled** connection string,
 because each serverless function instance opens its own connection (`lib/db.js` caps it at one).
+Put it in the Vercel project as `DATABASE_URL` (Settings → Environment Variables, for Production),
+then **redeploy**: environment variables only apply to deployments made after you set them.
 
-```
-DATABASE_URL='postgres://…?sslmode=require' npm run migrate
-```
+You do not need to run migrations by hand: the API creates and updates its tables on first use.
+Check it with `https://<your-domain>/api/health?db=1`:
 
-Migrations are plain SQL in `db/migrations/` and are applied once each, in order.
+| Response | Meaning |
+| --- | --- |
+| `{"ok":true,"db":"ok","migrations":2}` | ready |
+| `database not configured` | `DATABASE_URL` is missing from the Vercel project (or you did not redeploy after adding it) |
+| `cannot reach the database` | wrong host in `DATABASE_URL` |
+| `database login rejected` | wrong user or password in `DATABASE_URL` |
+| `database SSL problem` | add `?sslmode=require` to the end of `DATABASE_URL` |
 
 ## 2. Keys and secrets
 
