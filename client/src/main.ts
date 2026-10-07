@@ -13,6 +13,12 @@ async function boot() {
     return;
   }
 
+  if (location.pathname === '/result') {
+    const { renderResultRoute } = await import('./screens/result');
+    await renderResultRoute(root);
+    return;
+  }
+
   if (location.pathname === '/certificate') {
     const { renderCertificate } = await import('./screens/certificate');
     await renderCertificate(root);

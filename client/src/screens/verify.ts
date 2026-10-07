@@ -1,3 +1,4 @@
+import { el, fmtDate } from '../dom';
 import { checkToken } from '../verify/token';
 
 interface Status {
@@ -8,15 +9,6 @@ interface Status {
   expiresAt: string;
   worker: { name: string; employerId: string; photo: string | null };
 }
-
-const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: string) => {
-  const n = document.createElement(tag);
-  if (text !== undefined) n.textContent = text; // never innerHTML: the page shows server data
-  if (cls) n.className = cls;
-  return n;
-};
-
-const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
 async function fetchStatus(id: string): Promise<Status | 'not-found' | 'offline'> {
   try {
