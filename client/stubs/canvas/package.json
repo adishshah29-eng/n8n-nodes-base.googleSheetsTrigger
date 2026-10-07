@@ -1,0 +1,7 @@
+{
+  "name": "canvas",
+  "version": "2.11.2",
+  "description": "Stub. MindAR lists the native `canvas` module for its Node.js compiler; this app only uses MindAR in the browser, and compiling canvas fails on Vercel (no prebuilt binary for Node 22). See client/package.json overrides.",
+  "main": "index.js",
+  "license": "MIT"
+}
