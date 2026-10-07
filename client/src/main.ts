@@ -18,6 +18,11 @@ async function boot() {
 
   initOffline();
 
+  if (location.pathname === '/admin') {
+    const { renderAdmin } = await import('./admin');
+    return renderAdmin(root);
+  }
+
   if (location.pathname === '/result') {
     const { renderResultRoute } = await import('./screens/result');
     return renderResultRoute(root);
