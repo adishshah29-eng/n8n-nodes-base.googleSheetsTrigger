@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { pool } from './pool.js';
+import { pool } from '../lib/db.js';
 
-const dir = join(import.meta.dirname, '../../db/migrations');
+const dir = join(import.meta.dirname, '../db/migrations');
 
 await pool.query('CREATE TABLE IF NOT EXISTS migrations (name text PRIMARY KEY)');
 for (const name of readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {

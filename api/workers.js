@@ -1,18 +1,22 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { Router } from 'express';
-import { pool } from '../db/pool.js';
-
-export const workers = Router();
+import { pool } from '../lib/db.js';
 
 const LANGS = ['sat', 'hi', 'en'];
 
 // POST /api/workers — enroll; returns a device token (only its hash is stored)
-workers.post('/', async (req, res) => {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('allow', 'POST');
+    return res.status(405).json({ error: 'method not allowed' });
+  }
+
   const { name, employerId, siteId, lang, photo } = req.body ?? {};
   if (typeof name !== 'string' || !name.trim() || typeof employerId !== 'string' || !employerId.trim()) {
     return res.status(400).json({ error: 'name and employerId are required' });
   }
-  if (!LANGS.includes(lang)) return res.status(400).json({ error: `lang must be one of ${LANGS.join(', ')}` });
+  if (!LANGS.includes(lang)) {
+    return res.status(400).json({ error: `lang must be one of ${LANGS.join(', ')}` });
+  }
 
   const deviceToken = randomBytes(32).toString('hex');
   const hash = createHash('sha256').update(deviceToken).digest('hex');
@@ -22,4 +26,4 @@ workers.post('/', async (req, res) => {
     [name.trim(), employerId.trim(), siteId ?? null, lang, photo ?? null, hash],
   );
   res.status(201).json({ id: rows[0].id, deviceToken });
-});
+}

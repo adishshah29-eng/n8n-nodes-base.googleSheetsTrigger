@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+.env.local
+.vercel/
 *.log
-server/keys/*
-!server/keys/.gitkeep
+keys/*
+!keys/.gitkeep

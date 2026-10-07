@@ -9,6 +9,7 @@ export default defineConfig({
       workbox: {
         // Precache scenarios, models, markers and audio so the app runs in airplane mode.
         globPatterns: ['**/*.{js,css,html,json,glb,mind,mp3,woff2,png,svg}'],
+        navigateFallbackDenylist: [/^\/api\//],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
       manifest: {
