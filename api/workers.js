@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { pool } from '../lib/db.js';
+import { pool, withDb } from '../lib/db.js';
 
 const LANGS = ['sat', 'hi', 'en'];
 // The enrollment photo is what stops one person training for another, so it is required.
@@ -8,7 +8,7 @@ const PHOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
 const MAX_PHOTO_CHARS = 400_000;
 
 // POST /api/workers — enroll; returns a device token (only its hash is stored)
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('allow', 'POST');
     return res.status(405).json({ error: 'method not allowed' });
@@ -38,3 +38,5 @@ export default async function handler(req, res) {
   );
   res.status(201).json({ id: rows[0].id, deviceToken });
 }
+
+export default withDb(handler);

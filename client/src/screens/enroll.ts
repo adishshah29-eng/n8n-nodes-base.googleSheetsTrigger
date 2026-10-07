@@ -110,7 +110,7 @@ export function renderEnroll(root: HTMLElement, onDone: () => void) {
         photo,
       });
       if (result.ok) return onDone();
-      message.textContent = t(chosen, result.reason === 'offline' ? 'needOnline' : 'enrollFailed');
+      message.textContent = t(chosen, result.reason === 'offline' ? 'needOnline' : result.reason === 'server' ? 'serverNotReady' : 'enrollFailed');
       submit.disabled = false;
       submit.textContent = t(chosen, 'enroll');
     };

@@ -1,10 +1,10 @@
-import { pool } from '../../../lib/db.js';
+import { pool, withDb } from '../../../lib/db.js';
 import { isUuid } from '../../../lib/attempts.js';
 
 // GET /api/certificates/:id/status — public, used by the verify page.
 // The signature proves the certificate is genuine; this adds revocation and the
 // worker's identity (name, employer, enrollment photo), which is deliberately not in the QR.
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('allow', 'GET');
     return res.status(405).json({ error: 'method not allowed' });
@@ -35,3 +35,5 @@ export default async function handler(req, res) {
     worker: { name: c.name, employerId: c.employer_id, photo: c.photo_url },
   });
 }
+
+export default withDb(handler);

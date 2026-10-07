@@ -24,7 +24,7 @@ export async function fetchSites(): Promise<Site[]> {
   }
 }
 
-export type EnrollResult = { ok: true; worker: WorkerProfile } | { ok: false; reason: 'offline' | 'rejected' };
+export type EnrollResult = { ok: true; worker: WorkerProfile } | { ok: false; reason: 'offline' | 'rejected' | 'server' };
 
 /** Registers the worker with the server and stores the device token locally. Needs a connection. */
 export async function enroll(input: EnrollInput): Promise<EnrollResult> {
@@ -38,7 +38,8 @@ export async function enroll(input: EnrollInput): Promise<EnrollResult> {
   } catch {
     return { ok: false, reason: 'offline' };
   }
-  if (!res.ok) return { ok: false, reason: 'rejected' };
+  // 4xx: something in the form; 5xx: the server or its database is not ready (not the worker's fault)
+  if (!res.ok) return { ok: false, reason: res.status >= 500 ? 'server' : 'rejected' };
   const { id, deviceToken } = (await res.json()) as { id: string; deviceToken: string };
   const worker: WorkerProfile = { id, deviceToken, name: input.name, lang: input.lang };
   await db.worker.put(worker);

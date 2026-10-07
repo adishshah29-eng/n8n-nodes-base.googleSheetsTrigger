@@ -1,4 +1,4 @@
-import { pool } from '../lib/db.js';
+import { pool, withDb } from '../lib/db.js';
 import { workerFromRequest } from '../lib/auth.js';
 import { MAX_BATCH, validateAttempt } from '../lib/attempts.js';
 import { certificateFor } from '../lib/certificates.js';
@@ -23,7 +23,7 @@ const UPSERT = `
 //             certificates: [{ id, token }] }
 // Passing attempts that fail the plausibility checks are stored but flagged and earn no certificate.
 // `synced` includes attempts the server already had; the client clears both lists.
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('allow', 'POST');
     return res.status(405).json({ error: 'method not allowed' });
@@ -79,3 +79,5 @@ export default async function handler(req, res) {
 
   res.status(200).json({ synced, rejected, flagged, certificates: certificate ? [certificate] : [] });
 }
+
+export default withDb(handler);
