@@ -1,0 +1,15 @@
+{
+  "id": "fire-panel",
+  "target": 0,
+  "passScore": 70,
+  "steps": [
+    { "id": "s1", "type": "hazard", "model": "panel_fire.glb", "audio": "s1_intro", "next": "s2" },
+    { "id": "s2", "type": "choice", "timeLimit": 15, "audio": "s2_q",
+      "options": [
+        { "id": "water", "icon": "bucket", "correct": false, "critical": true,  "feedback": "s2_fb_water" },
+        { "id": "run",   "icon": "run",    "correct": false, "critical": false, "feedback": "s2_fb_run" },
+        { "id": "alarm", "icon": "alarm",  "correct": true,  "points": 30, "next": "s3" }
+      ] },
+    { "id": "s3", "type": "action", "gesture": "pass", "model": "co2_extinguisher.glb", "points": 40, "next": "end" }
+  ]
+}
