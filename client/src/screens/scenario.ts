@@ -18,6 +18,7 @@ interface GesturePart {
 }
 const gestures = gestureData as Record<string, GesturePart[]>;
 
+const PASS_MOMENT_MS = 2500;
 const LOST_GRACE_MS = 1500; // marker lost longer than this pauses the step timer
 const vibrate = (pattern: number | number[]) => navigator.vibrate?.(pattern);
 
@@ -59,8 +60,10 @@ export async function runScenario(
   screen.append(bar, exit, logo, hint, panel);
   root.append(screen);
 
+  panel.append(el('p', t(lang, 'loading'), 'step-text')); // camera + AR start can take a few seconds
   const stage = await makeStage(scenario);
   await stage.mount(screen);
+  panel.replaceChildren();
 
   // --- marker tracking: pause the step timer once the marker has been lost for a moment ---
   let timer = null as PausableTimer | null; // assigned inside closures, so widen for TS
@@ -191,7 +194,7 @@ export async function runScenario(
     await new Promise<void>((resolve) => {
       let next = 0;
       const note = el('p', undefined, 'note');
-      const buttons = el('div', undefined, 'cards');
+      const buttons = el('div', undefined, 'cards grid'); // 2x2: keeps the scene visible above
       for (const p of shuffle(parts)) {
         const b = el('button', undefined, 'card');
         b.dataset.part = p.id;
@@ -230,6 +233,11 @@ export async function runScenario(
   clear();
   timer?.stop();
   clearTimeout(lostTimeout);
+  if (engine.status === 'passed') {
+    // Let the worker watch the outcome (the fire going out) before the result screen takes over.
+    panel.append(message(t(lang, 'passedTitle')));
+    await new Promise((r) => setTimeout(r, PASS_MOMENT_MS));
+  }
   const result = engine.result();
   const attempt = await saveAttempt({ workerId: worker.id, ...result });
   stage.destroy();

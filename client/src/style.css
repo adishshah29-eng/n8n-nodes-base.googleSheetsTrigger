@@ -73,3 +73,12 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #
 @keyframes shake { 20%,60% { transform: translateX(-12px); } 40%,80% { transform: translateX(12px); } }
 @keyframes flash-red { 0%,60% { background: #7f1d1d; } }
 @keyframes pop { 50% { transform: scale(1.15); } }
+
+/* z-index makes this a stacking context: MindAR puts its video at z-index -2, which a
+   background here would otherwise paint over. */
+.stage-ar { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+
+.cards.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cards.grid .card { flex-direction: column; justify-content: center; text-align: center; gap: 4px; padding: 10px 6px; min-height: 92px; }
+.cards.grid .card-icon { font-size: 1.9rem; }
+.cards.grid .card-label { font-size: .9rem; flex: none; }

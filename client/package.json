@@ -7,19 +7,25 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "markers": "node scripts/make-markers.mjs",
+    "targets": "node scripts/compile-targets.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans-ol-chiki": "^5.3.0",
     "@noble/ed25519": "^2.3.0",
     "dexie": "^4.0.8",
     "howler": "^2.2.4",
-    "qrcode-generator": "^1.5.2"
+    "mind-ar": "^1.2.5",
+    "qrcode-generator": "^1.5.2",
+    "three": "^0.160.1"
   },
   "devDependencies": {
     "@types/howler": "^2.2.12",
     "@types/node": "^22.20.5",
+    "@types/three": "^0.160.0",
     "jsqr": "^1.4.0",
+    "playwright-core": "^1.63.0",
     "typescript": "^5.6.0",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.20.5",
