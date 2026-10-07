@@ -13,6 +13,13 @@ async function boot() {
     return;
   }
 
+  if (location.pathname === '/certificate') {
+    const { renderCertificate } = await import('./screens/certificate');
+    await renderCertificate(root);
+    window.addEventListener('online', () => void syncOutbox().then(() => renderCertificate(root)));
+    return;
+  }
+
   await requestPersistentStorage();
   void syncOutbox();
   window.addEventListener('online', () => void syncOutbox());
