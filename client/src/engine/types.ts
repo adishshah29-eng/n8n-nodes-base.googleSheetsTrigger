@@ -1,6 +1,11 @@
+export type Localized = Partial<Record<'en' | 'hi' | 'sat', string>>;
+
 export interface Option {
   id: string;
   icon: string;
+  label?: Localized;
+  /** On-screen explanation shown after a wrong choice; the spoken version is the `feedback` clip. */
+  feedbackText?: Localized;
   correct: boolean;
   critical?: boolean;
   points?: number;
@@ -10,6 +15,8 @@ export interface Option {
 
 interface BaseStep {
   id: string;
+  icon?: string;
+  text?: Localized;
   audio?: string;
   model?: string;
   timeLimit?: number;
@@ -23,7 +30,7 @@ export type Step =
 
 export interface Scenario {
   id: string;
-  title?: Partial<Record<'en' | 'hi' | 'sat', string>>;
+  title?: Localized;
   target: number;
   passScore: number;
   steps: Step[];
@@ -32,7 +39,10 @@ export interface Scenario {
 /** Per-step record kept for the admin dashboard. */
 export interface StepRecord {
   stepId: string;
+  /** The last option chosen. */
   optionId?: string;
+  /** Every option tried, in order, so the dashboard can show what workers pick FIRST. */
+  choices?: string[];
   decisionMs: number;
   tries: number;
 }

@@ -1,0 +1,70 @@
+{
+  "pass": [
+    {
+      "id": "pull",
+      "icon": "📌",
+      "label": {
+        "en": "Pull the pin",
+        "hi": "पिन खींचें"
+      }
+    },
+    {
+      "id": "aim",
+      "icon": "🎯",
+      "label": {
+        "en": "Aim at the base of the fire",
+        "hi": "आग के आधार पर निशाना लगाएँ"
+      }
+    },
+    {
+      "id": "squeeze",
+      "icon": "🤏",
+      "label": {
+        "en": "Squeeze the handle",
+        "hi": "हैंडल दबाएँ"
+      }
+    },
+    {
+      "id": "sweep",
+      "icon": "↔️",
+      "label": {
+        "en": "Sweep side to side",
+        "hi": "दाएँ-बाएँ घुमाएँ"
+      }
+    }
+  ],
+  "loto": [
+    {
+      "id": "isolate",
+      "icon": "🔌",
+      "label": {
+        "en": "Switch off the isolator",
+        "hi": "आइसोलेटर बंद करें"
+      }
+    },
+    {
+      "id": "lock",
+      "icon": "🔒",
+      "label": {
+        "en": "Put on your own lock",
+        "hi": "अपना ताला लगाएँ"
+      }
+    },
+    {
+      "id": "tag",
+      "icon": "🏷️",
+      "label": {
+        "en": "Attach your tag",
+        "hi": "अपना टैग लगाएँ"
+      }
+    },
+    {
+      "id": "test",
+      "icon": "🔍",
+      "label": {
+        "en": "Try to start: nothing moves",
+        "hi": "चालू करके देखें: कुछ नहीं चलता"
+      }
+    }
+  ]
+}

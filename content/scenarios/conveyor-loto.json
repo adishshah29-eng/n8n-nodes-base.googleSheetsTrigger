@@ -1,0 +1,195 @@
+{
+  "id": "conveyor-loto",
+  "title": {
+    "en": "Conveyor jam: lock-out / tag-out",
+    "hi": "कन्वेयर जाम: लॉक-आउट / टैग-आउट"
+  },
+  "target": 1,
+  "passScore": 70,
+  "steps": [
+    {
+      "id": "s1",
+      "type": "hazard",
+      "icon": "⚙️",
+      "model": "conveyor_jam",
+      "audio": "s1_intro",
+      "next": "s2",
+      "text": {
+        "en": "The conveyor belt is jammed with rock. You have to clear it.",
+        "hi": "कन्वेयर बेल्ट में पत्थर फँस गया है। आपको उसे साफ़ करना है।"
+      }
+    },
+    {
+      "id": "s2",
+      "type": "choice",
+      "timeLimit": 20,
+      "audio": "s2_q",
+      "text": {
+        "en": "What do you do first?",
+        "hi": "आप सबसे पहले क्या करेंगे?"
+      },
+      "options": [
+        {
+          "id": "reach",
+          "icon": "hand",
+          "label": {
+            "en": "Reach in and pull the rock out",
+            "hi": "हाथ डालकर पत्थर निकालें"
+          },
+          "correct": false,
+          "critical": true,
+          "feedback": "s2_fb_reach",
+          "feedbackText": {
+            "en": "Never reach into a machine that has power. The belt can start at any moment.",
+            "hi": "चालू मशीन में कभी हाथ न डालें। बेल्ट कभी भी चल सकती है।"
+          }
+        },
+        {
+          "id": "kick",
+          "icon": "kick",
+          "label": {
+            "en": "Kick the rock loose while it runs",
+            "hi": "चलती बेल्ट पर लात मारकर पत्थर हटाएँ"
+          },
+          "correct": false,
+          "critical": false,
+          "feedback": "s2_fb_kick",
+          "feedbackText": {
+            "en": "Stay away from moving parts. Stop the machine first.",
+            "hi": "चलते हिस्सों से दूर रहें। पहले मशीन बंद करें।"
+          }
+        },
+        {
+          "id": "stop",
+          "icon": "stop",
+          "label": {
+            "en": "Stop the conveyor and tell the supervisor",
+            "hi": "कन्वेयर बंद करें और सुपरवाइज़र को बताएँ"
+          },
+          "correct": true,
+          "points": 20,
+          "next": "s3"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "choice",
+      "timeLimit": 20,
+      "audio": "s3_q",
+      "text": {
+        "en": "How do you make sure nobody can start it?",
+        "hi": "आप कैसे पक्का करेंगे कि कोई इसे चालू न कर सके?"
+      },
+      "options": [
+        {
+          "id": "button",
+          "icon": "stop",
+          "label": {
+            "en": "Only press the stop button",
+            "hi": "सिर्फ़ स्टॉप बटन दबाएँ"
+          },
+          "correct": false,
+          "critical": false,
+          "feedback": "s3_fb_button",
+          "feedbackText": {
+            "en": "Anyone can press start again. Isolate the power and lock it.",
+            "hi": "कोई भी फिर से स्टार्ट दबा सकता है। बिजली अलग करें और ताला लगाएँ।"
+          }
+        },
+        {
+          "id": "lock",
+          "icon": "lock",
+          "label": {
+            "en": "Switch off the isolator, add your own lock and tag",
+            "hi": "आइसोलेटर बंद करें, अपना ताला और टैग लगाएँ"
+          },
+          "correct": true,
+          "points": 25,
+          "next": "s4"
+        },
+        {
+          "id": "watch",
+          "icon": "person",
+          "label": {
+            "en": "Ask a friend to watch the switch",
+            "hi": "किसी साथी से स्विच पर नज़र रखने को कहें"
+          },
+          "correct": false,
+          "critical": false,
+          "feedback": "s3_fb_watch",
+          "feedbackText": {
+            "en": "A person is not a lock. Use your own padlock and tag.",
+            "hi": "इंसान ताला नहीं होता। अपना ताला और टैग लगाएँ।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "type": "choice",
+      "timeLimit": 20,
+      "audio": "s4_q",
+      "text": {
+        "en": "Before you clear the jam, what must you do?",
+        "hi": "जाम साफ़ करने से पहले आपको क्या करना चाहिए?"
+      },
+      "options": [
+        {
+          "id": "assume",
+          "icon": "thumbsup",
+          "label": {
+            "en": "Assume it is safe now",
+            "hi": "मान लें कि अब सुरक्षित है"
+          },
+          "correct": false,
+          "critical": true,
+          "feedback": "s4_fb_assume",
+          "feedbackText": {
+            "en": "Never assume. Always prove the machine cannot start.",
+            "hi": "कभी अंदाज़ा न लगाएँ। हमेशा जाँचें कि मशीन चालू नहीं हो सकती।"
+          }
+        },
+        {
+          "id": "ask",
+          "icon": "person",
+          "label": {
+            "en": "Ask the operator if it is off",
+            "hi": "ऑपरेटर से पूछें कि बंद है या नहीं"
+          },
+          "correct": false,
+          "critical": false,
+          "feedback": "s4_fb_ask",
+          "feedbackText": {
+            "en": "Check for yourself. Do not rely on someone's word.",
+            "hi": "खुद जाँचें। किसी की बात पर भरोसा न करें।"
+          }
+        },
+        {
+          "id": "test",
+          "icon": "test",
+          "label": {
+            "en": "Try to start it and see that nothing moves",
+            "hi": "चालू करके देखें कि कुछ नहीं चलता"
+          },
+          "correct": true,
+          "points": 25,
+          "next": "s5"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "type": "action",
+      "gesture": "loto",
+      "model": "isolator",
+      "audio": "s5_q",
+      "points": 30,
+      "next": "end",
+      "text": {
+        "en": "Lock out and tag out, in the right order.",
+        "hi": "सही क्रम में लॉक-आउट और टैग-आउट करें।"
+      }
+    }
+  ]
+}

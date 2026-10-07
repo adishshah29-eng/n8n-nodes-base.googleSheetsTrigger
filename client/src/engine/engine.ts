@@ -88,9 +88,13 @@ export class ScenarioEngine {
       existing.tries += 1;
       existing.optionId = optionId;
       existing.decisionMs = decisionMs;
+      existing.choices?.push(optionId ?? 'timeout');
       return existing;
     }
     const rec: StepRecord = { stepId, optionId, decisionMs, tries: 1 };
+    if (optionId !== undefined || this.scenario.steps.find((s) => s.id === stepId)?.type === 'choice') {
+      rec.choices = [optionId ?? 'timeout'];
+    }
     this.records.push(rec);
     return rec;
   }

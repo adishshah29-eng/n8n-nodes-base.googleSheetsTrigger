@@ -35,4 +35,14 @@ describe('ScenarioEngine (fire-panel)', () => {
     expect(r.steps.find((s) => s.stepId === 's2')?.tries).toBe(2);
     expect(r.passed).toBe(true);
   });
+
+  it('records every choice tried, in order, including timeouts', () => {
+    const e = make();
+    e.continue();
+    e.timeout();
+    e.choose('run', 1500);
+    e.choose('alarm', 2000);
+    e.completeAction(4000);
+    expect(e.result().steps.find((s) => s.stepId === 's2')?.choices).toEqual(['timeout', 'run', 'alarm']);
+  });
 });

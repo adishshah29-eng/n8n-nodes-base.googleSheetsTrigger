@@ -16,6 +16,12 @@ export const strings = {
     tryAgain: 'Try again',
     home: 'Home',
     notFound: 'Result not found',
+    tapAgain: 'Tap again to choose',
+    timeUp: 'Time is up. Try again.',
+    wrongPart: 'Not that one. Follow the order.',
+    pointAtSign: 'Point the camera at the sign',
+    stepDone: 'Done',
+    loading: 'Loading…',
     chooseLanguage: 'Choose your language',
     continue: 'Continue',
     enrollTitle: 'Your details',
@@ -56,6 +62,12 @@ export const strings = {
     tryAgain: 'फिर से कोशिश करें',
     home: 'होम',
     notFound: 'नतीजा नहीं मिला',
+    tapAgain: 'चुनने के लिए दोबारा दबाएँ',
+    timeUp: 'समय खत्म। फिर से कोशिश करें।',
+    wrongPart: 'यह नहीं। क्रम का पालन करें।',
+    pointAtSign: 'कैमरा बोर्ड की ओर करें',
+    stepDone: 'हो गया',
+    loading: 'लोड हो रहा है…',
     chooseLanguage: 'अपनी भाषा चुनें',
     continue: 'आगे बढ़ें',
     enrollTitle: 'आपकी जानकारी',
@@ -96,3 +108,9 @@ export function t(lang: Lang, key: StringKey): string {
 /** Fills `{n}`-style placeholders. */
 export const fill = (text: string, vars: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
+
+import type { Localized } from './engine/types';
+
+/** Picks the text for a language: Santali falls back to Hindi (no native text yet), then English. */
+export const loc = (text: Localized | undefined, lang: Lang): string =>
+  (lang === 'en' ? text?.en : (text?.[lang] ?? text?.hi)) ?? text?.en ?? '';

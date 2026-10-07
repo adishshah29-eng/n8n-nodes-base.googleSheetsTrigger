@@ -23,6 +23,15 @@ async function boot() {
     return renderResultRoute(root);
   }
 
+  if (location.pathname === '/scenario') {
+    const [{ renderScenarioRoute }, { scenarios }, { createStage }] = await Promise.all([
+      import('./screens/scenario'),
+      import('./content/scenarios'),
+      import('./stage'),
+    ]);
+    return renderScenarioRoute(root, scenarios, createStage);
+  }
+
   if (location.pathname === '/certificate') {
     const { renderCertificate } = await import('./screens/certificate');
     await renderCertificate(root);

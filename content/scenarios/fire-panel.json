@@ -10,33 +10,62 @@
     {
       "id": "s1",
       "type": "hazard",
-      "model": "panel_fire.glb",
+      "icon": "🔥",
+      "model": "panel_fire",
       "audio": "s1_intro",
-      "next": "s2"
+      "next": "s2",
+      "text": {
+        "en": "A fire has started in the electrical panel. Sparks and smoke are coming out.",
+        "hi": "बिजली के पैनल में आग लग गई है। चिंगारियाँ और धुआँ निकल रहा है।"
+      }
     },
     {
       "id": "s2",
       "type": "choice",
       "timeLimit": 15,
       "audio": "s2_q",
+      "text": {
+        "en": "What do you do first?",
+        "hi": "आप सबसे पहले क्या करेंगे?"
+      },
       "options": [
         {
           "id": "water",
           "icon": "bucket",
+          "label": {
+            "en": "Throw water",
+            "hi": "पानी डालें"
+          },
           "correct": false,
           "critical": true,
-          "feedback": "s2_fb_water"
+          "feedback": "s2_fb_water",
+          "feedbackText": {
+            "en": "Water conducts electricity. Throwing it on a live panel can electrocute you.",
+            "hi": "पानी बिजली का संचालन करता है। चालू पैनल पर पानी डालने से करंट लग सकता है।"
+          }
         },
         {
           "id": "run",
           "icon": "run",
+          "label": {
+            "en": "Run away",
+            "hi": "भाग जाएँ"
+          },
           "correct": false,
           "critical": false,
-          "feedback": "s2_fb_run"
+          "feedback": "s2_fb_run",
+          "feedbackText": {
+            "en": "Running away lets the fire spread and leaves others in danger. Raise the alarm first.",
+            "hi": "भाग जाने से आग फैलती है और दूसरे खतरे में रहते हैं। पहले अलार्म बजाएँ।"
+          }
         },
         {
           "id": "alarm",
           "icon": "alarm",
+          "label": {
+            "en": "Raise the alarm",
+            "hi": "अलार्म बजाएँ"
+          },
           "correct": true,
           "points": 30,
           "next": "s3"
@@ -47,9 +76,14 @@
       "id": "s3",
       "type": "action",
       "gesture": "pass",
-      "model": "co2_extinguisher.glb",
+      "model": "co2_extinguisher",
+      "audio": "s3_q",
       "points": 40,
-      "next": "end"
+      "next": "end",
+      "text": {
+        "en": "Use the CO₂ extinguisher. Follow P-A-S-S in order.",
+        "hi": "CO₂ अग्निशामक इस्तेमाल करें। पास (P-A-S-S) क्रम से करें।"
+      }
     }
   ]
 }
