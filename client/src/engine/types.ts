@@ -23,6 +23,7 @@ export type Step =
 
 export interface Scenario {
   id: string;
+  title?: Partial<Record<'en' | 'hi' | 'sat', string>>;
   target: number;
   passScore: number;
   steps: Step[];

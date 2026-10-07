@@ -1,6 +1,6 @@
 export type Lang = 'sat' | 'hi' | 'en';
 
-const strings = {
+export const strings = {
   en: {
     passedTitle: 'Well done!',
     passedMsg: 'You passed this scenario.',
@@ -16,6 +16,30 @@ const strings = {
     tryAgain: 'Try again',
     home: 'Home',
     notFound: 'Result not found',
+    chooseLanguage: 'Choose your language',
+    continue: 'Continue',
+    enrollTitle: 'Your details',
+    name: 'Name',
+    employerId: 'Employer ID',
+    site: 'Mine / site',
+    siteNone: 'Select site',
+    photo: 'Your photo',
+    takePhoto: 'Take photo',
+    retakePhoto: 'Retake photo',
+    enroll: 'Register',
+    enrolling: 'Registering…',
+    needOnline: 'Connect to the internet to register. You only need to do this once.',
+    enrollFailed: 'Could not register. Check your details and try again.',
+    needAll: 'Please fill in your name and employer ID and take a photo.',
+    hello: 'Hello',
+    scenarios: 'Practice scenarios',
+    readyOffline: 'Ready offline',
+    preparingOffline: 'Getting ready for offline use…',
+    notReadyOffline: 'Not ready offline yet. Stay connected.',
+    waitingToSync: 'results waiting to sync',
+    start: 'Start',
+    done: 'Passed',
+    myCertificate: 'My certificate',
   },
   hi: {
     passedTitle: 'बहुत बढ़िया!',
@@ -32,6 +56,30 @@ const strings = {
     tryAgain: 'फिर से कोशिश करें',
     home: 'होम',
     notFound: 'नतीजा नहीं मिला',
+    chooseLanguage: 'अपनी भाषा चुनें',
+    continue: 'आगे बढ़ें',
+    enrollTitle: 'आपकी जानकारी',
+    name: 'नाम',
+    employerId: 'कर्मचारी आईडी',
+    site: 'खदान / साइट',
+    siteNone: 'साइट चुनें',
+    photo: 'आपकी फ़ोटो',
+    takePhoto: 'फ़ोटो लें',
+    retakePhoto: 'फ़ोटो दोबारा लें',
+    enroll: 'रजिस्टर करें',
+    enrolling: 'रजिस्टर हो रहा है…',
+    needOnline: 'रजिस्टर करने के लिए इंटरनेट से जुड़ें। यह सिर्फ़ एक बार करना है।',
+    enrollFailed: 'रजिस्टर नहीं हो सका। जानकारी जाँचें और फिर कोशिश करें।',
+    needAll: 'कृपया नाम, कर्मचारी आईडी भरें और फ़ोटो लें।',
+    hello: 'नमस्ते',
+    scenarios: 'अभ्यास',
+    readyOffline: 'बिना इंटरनेट के तैयार',
+    preparingOffline: 'बिना इंटरनेट के उपयोग के लिए तैयार हो रहा है…',
+    notReadyOffline: 'अभी बिना इंटरनेट के तैयार नहीं है। जुड़े रहें।',
+    waitingToSync: 'नतीजे सिंक होने बाकी हैं',
+    start: 'शुरू करें',
+    done: 'पास',
+    myCertificate: 'मेरा प्रमाणपत्र',
   },
 } satisfies Record<'en' | 'hi', Record<string, string>>;
 
@@ -44,3 +92,7 @@ export type StringKey = keyof (typeof strings)['en'];
 export function t(lang: Lang, key: StringKey): string {
   return strings[lang === 'en' ? 'en' : 'hi'][key];
 }
+
+/** Fills `{n}`-style placeholders. */
+export const fill = (text: string, vars: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));

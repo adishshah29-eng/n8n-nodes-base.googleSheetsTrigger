@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { t } from '../i18n';
+import { fill, strings, t } from '../i18n';
 import { resultKind, TEXT } from './view';
 
 describe('resultKind', () => {
@@ -15,6 +15,16 @@ describe('resultKind', () => {
 });
 
 describe('i18n', () => {
+  it('has the same keys in English and Hindi, none empty', () => {
+    expect(Object.keys(strings.hi).sort()).toEqual(Object.keys(strings.en).sort());
+    for (const lang of ['en', 'hi'] as const)
+      for (const v of Object.values(strings[lang])) expect(v.trim()).not.toBe('');
+  });
+
+  it('fills placeholders', () => {
+    expect(fill('{n} waiting', { n: 3 })).toBe('3 waiting');
+  });
+
   it('has text for every result kind in every language', () => {
     for (const lang of ['en', 'hi', 'sat'] as const)
       for (const k of Object.values(TEXT)) {

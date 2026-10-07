@@ -22,3 +22,27 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #
 .pending { font-weight: 600; }
 .button, .result button { display: block; box-sizing: border-box; width: 100%; font-size: 1.1rem; padding: 14px 24px; border-radius: 10px; border: 0; background: #16a34a; color: #fff; text-decoration: none; text-align: center; }
 .button.secondary { background: #374151; }
+
+.ol-chiki { font-family: 'Noto Sans Ol Chiki', system-ui, sans-serif; }
+.enroll, .home { max-width: 420px; margin: 0 auto; padding: 24px 16px; }
+.enroll h1, .home h1 { text-align: center; }
+.langs { display: flex; flex-direction: column; gap: 12px; margin: 24px 0; }
+.lang { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px; border-radius: 14px; border: 3px solid #374151; background: #1f2937; color: #fff; }
+.lang.selected { border-color: #16a34a; background: #14532d; }
+.lang-label { font-size: 1.8rem; font-weight: 700; }
+.lang-sub { opacity: 0.7; font-size: 0.9rem; }
+.enroll button, .home .button { display: block; box-sizing: border-box; width: 100%; font-size: 1.1rem; padding: 14px 24px; border-radius: 10px; border: 0; background: #16a34a; color: #fff; text-decoration: none; text-align: center; }
+.enroll button:disabled { opacity: 0.4; }
+.enroll button.secondary, .home .button.secondary { background: #374151; }
+.field { display: flex; flex-direction: column; gap: 6px; margin: 14px 0; }
+.field input, .field select { font-size: 1.1rem; padding: 12px; border-radius: 8px; border: 1px solid #4b5563; background: #1f2937; color: #fff; }
+.field-label { margin: 14px 0 6px; }
+.enroll .photo { display: block; width: 140px; height: 140px; margin: 0 auto 12px; object-fit: cover; border-radius: 50%; }
+.offline-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 0.9rem; }
+.offline-badge.ready { background: #14532d; color: #bbf7d0; }
+.offline-badge.preparing { background: #78350f; color: #fde68a; }
+.home { text-align: left; }
+.home .scenario { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 14px; margin: 12px 0; border-radius: 12px; background: #1f2937; }
+.home .scenario .button { grid-column: 1 / -1; }
+.scenario-title { font-weight: 600; }
+.tick { color: #86efac; }

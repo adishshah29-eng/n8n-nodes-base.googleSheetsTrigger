@@ -1,5 +1,8 @@
+import '@fontsource/noto-sans-ol-chiki/ol-chiki-400.css';
+import '@fontsource/noto-sans-ol-chiki/ol-chiki-700.css';
 import './style.css';
-import { requestPersistentStorage } from './store/db';
+import { initOffline } from './offline';
+import { db, requestPersistentStorage } from './store/db';
 import { syncOutbox } from './sync/sync';
 
 async function boot() {
@@ -13,10 +16,11 @@ async function boot() {
     return;
   }
 
+  initOffline();
+
   if (location.pathname === '/result') {
     const { renderResultRoute } = await import('./screens/result');
-    await renderResultRoute(root);
-    return;
+    return renderResultRoute(root);
   }
 
   if (location.pathname === '/certificate') {
@@ -29,7 +33,19 @@ async function boot() {
   await requestPersistentStorage();
   void syncOutbox();
   window.addEventListener('online', () => void syncOutbox());
-  root.textContent = 'Aotan';
+
+  // Home: enrolled workers see their scenarios, everyone else enrolls first.
+  const show = async () => {
+    const worker = await db.worker.toCollection().first();
+    if (worker) {
+      const { renderHome } = await import('./screens/home');
+      await renderHome(root, worker);
+    } else {
+      const { renderEnroll } = await import('./screens/enroll');
+      renderEnroll(root, () => void show());
+    }
+  };
+  await show();
 }
 
 void boot();

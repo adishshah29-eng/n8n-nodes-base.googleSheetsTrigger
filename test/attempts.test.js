@@ -28,7 +28,7 @@ const attempt = (over = {}) => ({
 
 let tokenA, tokenB, idA;
 const enroll = async (name) => {
-  const r = await call(workersHandler, { body: { name, employerId: 'E1', lang: 'sat' } });
+  const r = await call(workersHandler, { body: { name, employerId: 'E1', lang: 'sat', photo: 'data:image/jpeg;base64,AAAA' } });
   assert.equal(r.code, 201);
   return r.body;
 };

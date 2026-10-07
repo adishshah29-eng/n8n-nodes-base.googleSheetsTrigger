@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/noto-sans-ol-chiki": "^5.3.0",
     "@noble/ed25519": "^2.3.0",
     "dexie": "^4.0.8",
     "howler": "^2.2.4",
