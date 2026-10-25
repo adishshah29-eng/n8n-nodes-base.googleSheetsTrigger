@@ -39,6 +39,7 @@ export class ARStage implements Stage {
     this.content.root.scale.setScalar(AR_SCALE);
     this.container.dataset.tracking = 'lost';
     this.container.dataset.frames = '0';
+    if (new URLSearchParams(location.search).get('debug') === '1') (window as unknown as { __aotanAR: unknown }).__aotanAR = this; // inspection on a phone
   }
 
   async mount(host: HTMLElement) {
@@ -119,7 +120,7 @@ export class ARStage implements Stage {
     camera.add(this.content.root);
     this.content.root.matrixAutoUpdate = true;
     this.content.root.scale.setScalar(FREE_SCALE * AR_SCALE);
-    this.content.root.position.set(0, -0.12 * FREE_SCALE, -2.1 * FREE_SCALE);
+    this.content.root.position.set(0, -0.12 * FREE_SCALE, -2.6 * FREE_SCALE);
     this.content.root.rotation.set(0.12, -0.25, 0);
     this.catcher.visible = false; // no real surface to cast onto
     this.container.dataset.tracking = 'free';

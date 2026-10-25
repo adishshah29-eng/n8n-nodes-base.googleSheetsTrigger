@@ -42,8 +42,8 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #
 .offline-badge.ready { background: #14532d; color: #bbf7d0; }
 .offline-badge.preparing { background: #78350f; color: #fde68a; }
 .home { text-align: left; }
-.home .scenario { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 14px; margin: 12px 0; border-radius: 12px; background: #1f2937; }
-.home .scenario .button { grid-column: 1 / -1; }
+.home .scenario-card { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 14px; margin: 12px 0; border-radius: 12px; background: #1f2937; }
+.home .scenario-card .button { grid-column: 1 / -1; }
 .scenario-title { font-weight: 600; }
 .tick { color: #86efac; }
 

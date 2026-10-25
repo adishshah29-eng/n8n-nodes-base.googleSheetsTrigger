@@ -51,7 +51,8 @@ export async function sql(query, params = []) {
 
 /** Enrolls a worker through the real API. */
 export async function enrollViaApi(name, lang = 'en', photo = PHOTO) {
-  const r = await fetch(`${BASE}/api/workers`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, employerId: 'E2E-1', lang, photo }) });
+  const r = await fetch(`${BASE}/api/workers`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, employerId: 'E2E-1', lang, photo }) })
+    .catch((e) => { throw new Error(`cannot reach ${BASE}: ${e.cause?.code ?? ''} ${e.cause?.message ?? e.message}`); });
   assert.equal(r.status, 201, 'enrollment via API');
   return r.json();
 }

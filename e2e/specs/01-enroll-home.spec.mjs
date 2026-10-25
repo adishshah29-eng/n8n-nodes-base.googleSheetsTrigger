@@ -61,7 +61,10 @@ await step('online enrollment lands on home and the worker is stored server-side
 });
 
 await step('home lists both scenarios and the badge turns "ready offline" only after precaching', async () => {
-  assert.equal(await page.locator('.scenario').count(), 2);
+  assert.equal(await page.locator('.scenario-card').count(), 2);
+  for (const start of await page.locator('.scenario-card .button').all()) assert.ok(await start.isVisible(), 'every Start button is visible on screen');
+  const box = await page.locator('.scenario-card').first().boundingBox();
+  assert.ok(box.height < 300, `a scenario card is a compact row, not a full screen (${box.height}px)`);
   await page.waitForSelector('.offline-badge.ready', { timeout: 20000 });
   await waitOfflineReady(page);
 });

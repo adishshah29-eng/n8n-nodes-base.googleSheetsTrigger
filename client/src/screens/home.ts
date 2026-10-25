@@ -36,7 +36,7 @@ export async function renderHome(root: HTMLElement, worker: WorkerProfile) {
   card.append(el('h2', t(lang, 'scenarios')));
   const passed = new Set((await db.attempts.filter((a) => a.passed).toArray()).map((a) => a.scenarioId));
   for (const s of scenarios) {
-    const row = el('div', undefined, 'scenario');
+    const row = el('div', undefined, 'scenario-card'); // not 'scenario': that class is the full-screen scenario page
     row.append(el('span', s.title?.[lang === 'en' ? 'en' : 'hi'] ?? s.id, 'scenario-title'));
     if (passed.has(s.id)) row.append(el('span', `✓ ${t(lang, 'done')}`, 'tick'));
     const start = el('a', t(lang, 'start'), 'button');
